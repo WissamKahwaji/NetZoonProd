@@ -156,7 +156,9 @@ export const createAds = async (req, res) => {
   if (!image) {
     return res.status(404).json({ message: "Attached file is not an image." });
   }
-  const urlImage = "https://back.netzoon.com/" + image.path.replace(/\\/g, "/");
+  const urlImage =
+    "https://www.netzoonback.siidevelopment.com/" +
+    image.path.replace(/\\/g, "/");
 
   const ownerId = new mongoose.Types.ObjectId(owner);
 
@@ -197,7 +199,8 @@ export const createAds = async (req, res) => {
         }
 
         const imageUrl =
-          "https://back.netzoon.com/" + image.path.replace(/\\/g, "/");
+          "https://www.netzoonback.siidevelopment.com/" +
+          image.path.replace(/\\/g, "/");
         imageUrls.push(imageUrl);
         newAds.advertisingImageList = imageUrls;
       }
@@ -205,7 +208,8 @@ export const createAds = async (req, res) => {
     if (req.files["video"]) {
       const video = req.files["video"][0];
       const urlVideo =
-        "https://back.netzoon.com/" + video.path.replace(/\\/g, "/");
+        "https://www.netzoonback.siidevelopment.com/" +
+        video.path.replace(/\\/g, "/");
       newAds.advertisingVedio = urlVideo;
     }
 
@@ -263,7 +267,8 @@ export const editAdvertisement = async (req, res) => {
     if (req.files["image"]) {
       const image = req.files["image"][0];
       const urlImage =
-        "https://back.netzoon.com/" + image.path.replace(/\\/g, "/");
+        "https://www.netzoonback.siidevelopment.com/" +
+        image.path.replace(/\\/g, "/");
       existingAd.advertisingImage = urlImage;
     }
 
@@ -284,7 +289,8 @@ export const editAdvertisement = async (req, res) => {
         }
 
         const imageUrl =
-          "https://back.netzoon.com/" + image.path.replace(/\\/g, "/");
+          "https://www.netzoonback.siidevelopment.com/" +
+          image.path.replace(/\\/g, "/");
         imageUrls.push(imageUrl);
       }
       existingAd.advertisingImageList = imageUrls;
@@ -293,7 +299,8 @@ export const editAdvertisement = async (req, res) => {
     if (req.files["video"]) {
       const video = req.files["video"][0];
       const urlVideo =
-        "https://back.netzoon.com/" + video.path.replace(/\\/g, "/");
+        "https://www.netzoonback.siidevelopment.com/" +
+        video.path.replace(/\\/g, "/");
       existingAd.advertisingVedio = urlVideo;
     }
 

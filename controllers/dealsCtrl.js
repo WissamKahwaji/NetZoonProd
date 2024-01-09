@@ -129,7 +129,9 @@ export const AddDeal = async (req, res) => {
         .json({ message: "Attached file is not an image." });
     }
 
-    const imgUrl = "https://back.netzoon.com/" + image.path.replace(/\\/g, "/");
+    const imgUrl =
+      "https://www.netzoonback.siidevelopment.com/" +
+      image.path.replace(/\\/g, "/");
     const foundCategory = await DealsCategories.findOne({ name: category });
 
     console.log(foundCategory);
@@ -210,7 +212,8 @@ export const editDeal = async (req, res) => {
     if (req.files["dealImage"]) {
       const image = req.files["dealImage"][0];
       const imgUrl =
-        "https://back.netzoon.com/" + image.path.replace(/\\/g, "/");
+        "https://www.netzoonback.siidevelopment.com/" +
+        image.path.replace(/\\/g, "/");
       existingDeal.imgUrl = imgUrl;
     }
 

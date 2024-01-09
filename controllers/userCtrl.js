@@ -187,21 +187,21 @@ export const oAuthSignIn = async (req, res) => {
       //   : null;
 
       // const coverUrlImage = coverPhoto
-      //   ? "https://back.netzoon.com/" + coverPhoto.path.replace(/\\/g, "/")
+      //   ? "https://www.netzoonback.siidevelopment.com/" + coverPhoto.path.replace(/\\/g, "/")
       //   : "https://i.imgur.com/EOWYmuQ.png";
 
       // const frontIdPhotoUrlImage = frontIdPhoto
-      //   ? "https://back.netzoon.com/" + frontIdPhoto.path.replace(/\\/g, "/")
+      //   ? "https://www.netzoonback.siidevelopment.com/" + frontIdPhoto.path.replace(/\\/g, "/")
       //   : null;
       // const backIdPhotoUrlImage = backIdPhoto
-      //   ? "https://back.netzoon.com/" + backIdPhoto.path.replace(/\\/g, "/")
+      //   ? "https://www.netzoonback.siidevelopment.com/" + backIdPhoto.path.replace(/\\/g, "/")
       //   : null;
       // const tradeLicensePhotoUrl = tradeLicensePhoto
-      //   ? "https://back.netzoon.com/" +
+      //   ? "https://www.netzoonback.siidevelopment.com/" +
       //     tradeLicensePhoto.path.replace(/\\/g, "/")
       //   : null;
       // const deliveryPermitPhotoUrl = deliveryPermitPhoto
-      //   ? "https://back.netzoon.com/" +
+      //   ? "https://www.netzoonback.siidevelopment.com/" +
       //     deliveryPermitPhoto.path.replace(/\\/g, "/")
       //   : null;
 
@@ -426,25 +426,31 @@ export const signUp = async (req, res) => {
     }
 
     const profileUrlImage = profilePhoto
-      ? "https://back.netzoon.com/" + profilePhoto.path.replace(/\\/g, "/")
+      ? "https://www.netzoonback.siidevelopment.com/" +
+        profilePhoto.path.replace(/\\/g, "/")
       : "https://i.imgur.com/hnIl9uM.jpg";
     const coverUrlImage = coverPhoto
-      ? "https://back.netzoon.com/" + coverPhoto.path.replace(/\\/g, "/")
+      ? "https://www.netzoonback.siidevelopment.com/" +
+        coverPhoto.path.replace(/\\/g, "/")
       : "https://i.imgur.com/EOWYmuQ.png";
     const banerUrlImage = bannerPhoto
-      ? "https://back.netzoon.com/" + bannerPhoto.path.replace(/\\/g, "/")
+      ? "https://www.netzoonback.siidevelopment.com/" +
+        bannerPhoto.path.replace(/\\/g, "/")
       : null;
     const frontIdPhotoUrlImage = frontIdPhoto
-      ? "https://back.netzoon.com/" + frontIdPhoto.path.replace(/\\/g, "/")
+      ? "https://www.netzoonback.siidevelopment.com/" +
+        frontIdPhoto.path.replace(/\\/g, "/")
       : null;
     const backIdPhotoUrlImage = backIdPhoto
-      ? "https://back.netzoon.com/" + backIdPhoto.path.replace(/\\/g, "/")
+      ? "https://www.netzoonback.siidevelopment.com/" +
+        backIdPhoto.path.replace(/\\/g, "/")
       : null;
     const tradeLicensePhotoUrl = tradeLicensePhoto
-      ? "https://back.netzoon.com/" + tradeLicensePhoto.path.replace(/\\/g, "/")
+      ? "https://www.netzoonback.siidevelopment.com/" +
+        tradeLicensePhoto.path.replace(/\\/g, "/")
       : null;
     const deliveryPermitPhotoUrl = deliveryPermitPhoto
-      ? "https://back.netzoon.com/" +
+      ? "https://www.netzoonback.siidevelopment.com/" +
         deliveryPermitPhoto.path.replace(/\\/g, "/")
       : null;
 
@@ -985,34 +991,38 @@ export const EditUser = async (req, res) => {
     if (req.files && req.files["profilePhoto"]) {
       const profilePhoto = req.files["profilePhoto"][0];
       profileUrlImage =
-        "https://back.netzoon.com/" + profilePhoto.path.replace(/\\/g, "/");
+        "https://www.netzoonback.siidevelopment.com/" +
+        profilePhoto.path.replace(/\\/g, "/");
     }
     if (req.files && req.files["coverPhoto"]) {
       const coverPhoto = req.files["coverPhoto"][0];
       coverUrlImage =
-        "https://back.netzoon.com/" + coverPhoto.path.replace(/\\/g, "/");
+        "https://www.netzoonback.siidevelopment.com/" +
+        coverPhoto.path.replace(/\\/g, "/");
     }
 
     if (req.files && req.files["frontIdPhoto"]) {
       const frontIdPhoto = req.files["frontIdPhoto"][0];
       frontIdPhotoUrlImage =
-        "https://back.netzoon.com/" + frontIdPhoto.path.replace(/\\/g, "/");
+        "https://www.netzoonback.siidevelopment.com/" +
+        frontIdPhoto.path.replace(/\\/g, "/");
     }
     if (req.files && req.files["backIdPhoto"]) {
       const backIdPhoto = req.files["backIdPhoto"][0];
       backIdPhotoUrlImage =
-        "https://back.netzoon.com/" + backIdPhoto.path.replace(/\\/g, "/");
+        "https://www.netzoonback.siidevelopment.com/" +
+        backIdPhoto.path.replace(/\\/g, "/");
     }
     if (req.files && req.files["tradeLicensePhoto"]) {
       const tradeLicensePhoto = req.files["tradeLicensePhoto"][0];
       tradeLicensePhotoUrlImage =
-        "https://back.netzoon.com/" +
+        "https://www.netzoonback.siidevelopment.com/" +
         tradeLicensePhoto.path.replace(/\\/g, "/");
     }
     if (req.files && req.files["deliveryPermitPhoto"]) {
       const deliveryPermitPhoto = req.files["deliveryPermitPhoto"][0];
       deliveryPermitPhotoUrlImage =
-        "https://back.netzoon.com/" +
+        "https://www.netzoonback.siidevelopment.com/" +
         deliveryPermitPhoto.path.replace(/\\/g, "/");
     }
 

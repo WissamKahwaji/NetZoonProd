@@ -69,7 +69,8 @@ export const addCompanyService = async (req, res) => {
     const image = req.files["image"] ? req.files["image"][0] : null;
 
     const imageUrl = image
-      ? "https://back.netzoon.com/" + image.path.replace(/\\/g, "/")
+      ? "https://www.netzoonback.siidevelopment.com/" +
+        image.path.replace(/\\/g, "/")
       : null;
 
     const serviceCategory = await serviceCategoryModel.findById(category);
@@ -105,7 +106,8 @@ export const addCompanyService = async (req, res) => {
         }
 
         const imageUrl =
-          "https://back.netzoon.com/" + image.path.replace(/\\/g, "/");
+          "https://www.netzoonback.siidevelopment.com/" +
+          image.path.replace(/\\/g, "/");
         imageUrls.push(imageUrl);
         newService.serviceImageList = imageUrls;
       }
@@ -113,7 +115,8 @@ export const addCompanyService = async (req, res) => {
     if (req.files["video"]) {
       const video = req.files["video"][0];
       const urlVideo =
-        "https://back.netzoon.com/" + video.path.replace(/\\/g, "/");
+        "https://www.netzoonback.siidevelopment.com/" +
+        video.path.replace(/\\/g, "/");
       newService.vedioUrl = urlVideo;
     }
 
@@ -160,7 +163,8 @@ export const editCompanyService = async (req, res) => {
     if (req.files["image"]) {
       const image = req.files["image"][0];
       const urlImage =
-        "https://back.netzoon.com/" + image.path.replace(/\\/g, "/");
+        "https://www.netzoonback.siidevelopment.com/" +
+        image.path.replace(/\\/g, "/");
       existingService.imageUrl = urlImage;
     }
 
@@ -179,7 +183,8 @@ export const editCompanyService = async (req, res) => {
         }
 
         const imageUrl =
-          "https://back.netzoon.com/" + image.path.replace(/\\/g, "/");
+          "https://www.netzoonback.siidevelopment.com/" +
+          image.path.replace(/\\/g, "/");
         imageUrls.push(imageUrl);
         existingService.serviceImageList = imageUrls;
       }
@@ -187,7 +192,8 @@ export const editCompanyService = async (req, res) => {
     if (req.files["video"]) {
       const video = req.files["video"][0];
       const urlVideo =
-        "https://back.netzoon.com/" + video.path.replace(/\\/g, "/");
+        "https://www.netzoonback.siidevelopment.com/" +
+        video.path.replace(/\\/g, "/");
       existingService.vedioUrl = urlVideo;
     }
 

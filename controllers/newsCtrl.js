@@ -68,7 +68,8 @@ export const createNews = async (req, res) => {
         .json({ message: "Attached file is not an image." });
     }
     const urlImage =
-      "https://back.netzoon.com/" + image.path.replace(/\\/g, "/");
+      "https://www.netzoonback.siidevelopment.com/" +
+      image.path.replace(/\\/g, "/");
 
     const news = new News({
       title,
@@ -107,7 +108,8 @@ export const editNews = async (req, res) => {
     if (req.files["image"]) {
       const image = req.files["image"][0];
       const urlImage =
-        "https://back.netzoon.com/" + image.path.replace(/\\/g, "/");
+        "https://www.netzoonback.siidevelopment.com/" +
+        image.path.replace(/\\/g, "/");
       existingNews.imgUrl = urlImage;
     }
     // existingNews.ownerName = ownerName;

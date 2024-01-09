@@ -316,7 +316,8 @@ export const addProduct = async (req, res) => {
     }
 
     const urlImage =
-      "https://back.netzoon.com/" + image.path.replace(/\\/g, "/");
+      "https://www.netzoonback.siidevelopment.com/" +
+      image.path.replace(/\\/g, "/");
 
     // Find department by name
     const department = await Departments.findOne({ name: departmentName });
@@ -380,7 +381,8 @@ export const addProduct = async (req, res) => {
         }
 
         const imageUrl =
-          "https://back.netzoon.com/" + image.path.replace(/\\/g, "/");
+          "https://www.netzoonback.siidevelopment.com/" +
+          image.path.replace(/\\/g, "/");
         imageUrls.push(imageUrl);
         productData.images = imageUrls;
       }
@@ -390,13 +392,16 @@ export const addProduct = async (req, res) => {
     if (req.files["video"]) {
       const video = req.files["video"][0];
       const urlVideo =
-        "https://back.netzoon.com/" + video.path.replace(/\\/g, "/");
+        "https://www.netzoonback.siidevelopment.com/" +
+        video.path.replace(/\\/g, "/");
       productData.vedioUrl = urlVideo;
     }
 
     if (req.files["gif"]) {
       const gif = req.files["gif"][0];
-      const gifUrl = "https://back.netzoon.com/" + gif.path.replace(/\\/g, "/");
+      const gifUrl =
+        "https://www.netzoonback.siidevelopment.com/" +
+        gif.path.replace(/\\/g, "/");
       productData.gifUrl = gifUrl;
     }
 
@@ -450,14 +455,15 @@ export const editProduct = async (req, res) => {
     if (req.files && req.files["image"]) {
       const profilePhoto = req.files["image"][0];
       urlImage =
-        "https://back.netzoon.com/" + profilePhoto.path.replace(/\\/g, "/");
+        "https://www.netzoonback.siidevelopment.com/" +
+        profilePhoto.path.replace(/\\/g, "/");
     }
     // const image = req.files['image'][0];
     // if (!image) {
     //     return res.status(404).json({ message: 'Attached file is not an image.' });
     // }
 
-    // const urlImage = 'https://back.netzoon.com/' + image.path.replace(/\\/g, '/');
+    // const urlImage = 'https://www.netzoonback.siidevelopment.com/' + image.path.replace(/\\/g, '/');
     let updatedProduct;
     if (req.files && req.files["image"]) {
       updatedProduct = await Product.findByIdAndUpdate(
@@ -510,13 +516,16 @@ export const editProduct = async (req, res) => {
     if (req.files["video"]) {
       const video = req.files["video"][0];
       const urlVideo =
-        "https://back.netzoon.com/" + video.path.replace(/\\/g, "/");
+        "https://www.netzoonback.siidevelopment.com/" +
+        video.path.replace(/\\/g, "/");
       updatedProduct.vedioUrl = urlVideo;
     }
 
     if (req.files["gif"]) {
       const gif = req.files["gif"][0];
-      const gifUrl = "https://back.netzoon.com/" + gif.path.replace(/\\/g, "/");
+      const gifUrl =
+        "https://www.netzoonback.siidevelopment.com/" +
+        gif.path.replace(/\\/g, "/");
       updatedProduct.gifUrl = gifUrl;
     }
 
