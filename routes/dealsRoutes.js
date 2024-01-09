@@ -20,9 +20,9 @@ router.get("/alldealsItems", getAllDeals);
 router.get("/dealsByCat", getAllDealsByCat);
 router.get("/:id", getDealById);
 router.get("/userDeals/:userId", getUserDeals);
-router.post("/addDeal", AddDeal);
-router.put("/:id", editDeal);
-router.delete("/:id", deleteDeal);
+router.post("/addDeal", auth, AddDeal);
+router.put("/:id", auth, editDeal);
+router.delete("/:id", auth, deleteDeal);
 router.post("/purch/save/:userId", savePurchDeal);
 router.get("/purch/:userId", getUserPurchDeal);
 

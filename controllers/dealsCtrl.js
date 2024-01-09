@@ -193,7 +193,9 @@ export const editDeal = async (req, res) => {
     if (!existingDeal) {
       return res.status(404).json({ message: "Deals item not found" });
     }
-
+    if (req.userId != existingDeal.owner) {
+      return res.status(403).json("Error in Authurization");
+    }
     existingDeal.name = name;
     existingDeal.companyName = companyName;
     existingDeal.prevPrice = prevPrice;
@@ -228,7 +230,9 @@ export const deleteDeal = async (req, res) => {
     if (!existingDeal) {
       return res.status(404).json("Deals item not found");
     }
-
+    if (req.userId != existingDeal.owner) {
+      return res.status(403).json("Error in Authurization");
+    }
     // Delete the deals item
     await DealsItems.findByIdAndRemove(id);
 

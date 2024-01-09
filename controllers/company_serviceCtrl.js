@@ -62,6 +62,10 @@ export const addCompanyService = async (req, res) => {
     console.log(req.query);
     const { category, country } = req.query;
     const { title, description, price, owner, whatsAppNumber, bio } = req.body;
+
+    if (req.userId != owner) {
+      return res.status(403).json("Error in Authurization");
+    }
     const image = req.files["image"] ? req.files["image"][0] : null;
 
     const imageUrl = image
@@ -137,6 +141,9 @@ export const editCompanyService = async (req, res) => {
       return res.status(404).json({ message: "Company service not found" });
     }
 
+    if (req.userId != existingService.owner) {
+      return res.status(403).json("Error in Authurization");
+    }
     // Update company service fields
     existingService.title = title;
     existingService.description = description;
@@ -202,6 +209,9 @@ export const deleteCompanyService = async (req, res) => {
       return res.status(404).json("Company service not found");
     }
 
+    if (req.userId != existingService.owner) {
+      return res.status(403).json("Error in Authurization");
+    }
     // Delete the company service
     await CompanyServices.findByIdAndRemove(id);
 

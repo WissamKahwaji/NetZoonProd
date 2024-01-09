@@ -9,22 +9,16 @@ const shipmentUrl =
   "https://ws.aramex.net/ShippingAPI.V2/Shipping/Service_1_0.svc/json/CreateShipments";
 
 const fetchCitiesUrl =
-  "https://ws.sbx.aramex.net/ShippingAPI.V2/Location/Service_1_0.svc/json/FetchCities";
+  "https://ws.aramex.net/ShippingAPI.V2/Location/Service_1_0.svc/json/FetchCities";
 
-// Controller for rate calculation
 export const calculateRateController = async (req, res) => {
   try {
-    // Get the request body from the client
     const requestBody = req.body;
 
-    // Make a POST request to the Aramex API
     const response = await axios.post(aramexApiUrl, requestBody);
 
-    // Send the Aramex API response back to the client
     res.json(response.data);
   } catch (error) {
-    // Handle errors
-    console.error("Error:", error.message);
     res.status(500).json({ error: error });
   }
 };
@@ -72,10 +66,10 @@ export const fetchCities = async (req, res) => {
         Source: 24,
         AccountCountryCode: "AE",
         AccountEntity: "DXB",
-        AccountPin: "116216",
-        AccountNumber: "45796",
-        UserName: "testingapi@aramex.com",
-        Password: "R123456789$r",
+        AccountPin: "906169",
+        AccountNumber: "71923340",
+        UserName: "netzoon.2023@gmail.com",
+        Password: "Netzoon@123@aramex",
         Version: "v1",
       },
       CountryCode: countryCode,

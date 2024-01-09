@@ -5,11 +5,12 @@ import {
   createShipmentController,
   fetchCities,
 } from "../controllers/aramex.js";
+import auth from "../middlewares/auth.js";
 
 const router = express.Router();
 
-router.post("/calculateRate", calculateRateController);
-router.post("/createPickUp", createPickUpController);
-router.post("/createShipment", createShipmentController);
-router.post("/fetchCities", fetchCities);
+router.post("/calculateRate", auth, calculateRateController);
+router.post("/createPickUp", auth, createPickUpController);
+router.post("/createShipment", auth, createShipmentController);
+router.post("/fetchCities", auth, fetchCities);
 export default router;

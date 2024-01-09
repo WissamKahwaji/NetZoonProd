@@ -1,47 +1,46 @@
 import mongoose from "mongoose";
 
-
-const VehicleSchema = mongoose.Schema({
-
+const VehicleSchema = mongoose.Schema(
+  {
     name: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     imageUrl: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     description: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     price: {
-        type: Number,
-        required: true,
+      type: Number,
+      required: true,
     },
     kilometers: {
-        type: Number,
+      type: Number,
     },
     year: Date,
 
     location: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     type: {
-        type: String,
+      type: String,
     },
     category: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     creator: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
     carImages: {
-        type: [String]
+      type: [String],
     },
     vedioUrl: String,
     contactNumber: String,
@@ -61,14 +60,14 @@ const VehicleSchema = mongoose.Schema({
     steeringSide: String,
     guarantee: Boolean,
     forWhat: String,
+    regionalSpecs: String,
+
     country: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
+  },
+  { timestamps: true }
+);
 
-
-}, { timestamps: true });
-
-
-
-export const Vehicle = mongoose.model('Vehicles', VehicleSchema);
+export const Vehicle = mongoose.model("Vehicles", VehicleSchema);

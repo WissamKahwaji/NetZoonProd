@@ -12,6 +12,7 @@ import {
   deleteAccount,
   deleteProductFromSelectedProducts,
   deleteUser,
+  forgetPassword,
   getAccountByEmail,
   getAllFavorites,
   getAllUsers,
@@ -25,13 +26,16 @@ import {
   oAuthSignIn,
   otpLogin,
   rateUser,
+  refreshAccessToken,
   removeProductFromFavorites,
+  resetPassword,
   signUp,
   signin,
   toggleFollow,
   verifyOTPLogin,
 } from "../controllers/userCtrl.js";
 import { stripeAccount } from "../services/stripe_service.js";
+import auth from "../middlewares/auth.js";
 
 const router = express.Router();
 
@@ -85,25 +89,30 @@ router.post(
 router.post("/oauth", oAuthSignIn);
 router.post("/changeAccount", changeAccount);
 
-router.put("/password/:userId", changePassword);
-router.delete("/delete-user/:userId", deleteAccount);
+router.put("/password/:userId", auth, changePassword);
+router.delete("/delete-user/:userId", auth, deleteAccount);
 router.post("/otpLogin", otpLogin);
 router.post("/verifyOtpLogin", verifyOTPLogin);
 
-router.put("/editUser/:userId", EditUser);
+router.put("/net-editUser/:userId", auth, EditUser);
 router.get("/getuseraccounts", getAccountByEmail);
-router.post("/addaccount", addAccount);
+router.post("/addaccount", auth, addAccount);
 
-router.post("/favorites/add", addProductToFavorites);
-router.post("/favorites/remove", removeProductFromFavorites);
-router.post("/favorites/clear", clearFav);
+router.post("/favorites/add", auth, addProductToFavorites);
+router.post("/favorites/remove", auth, removeProductFromFavorites);
+router.post("/favorites/clear", auth, clearFav);
 router.get("/favorites/:userId", getAllFavorites);
 router.get("/getUser/:userId", getUserById);
 router.get("/getUserByType", getUserByType);
 router.get("/getSelectedProducts/:userId", getSelectedProducts);
-router.post("/addToSelectedProducts/:userId", addProductsToSelectedProducts);
+router.post(
+  "/addToSelectedProducts/:userId",
+  auth,
+  addProductsToSelectedProducts
+);
 router.delete(
   "/deleteFromSelectedProducts/:userId/:productId",
+  auth,
   deleteProductFromSelectedProducts
 );
 
@@ -115,9 +124,13 @@ router.post("/:userId/addvisitor", addNumberOfVisitors);
 router.get("/:id/visitors", getVisitors);
 router.post("/:id/rate", rateUser);
 router.get("/:id/rating", getUserTotalRating);
-router.delete("/net-remove/:id", deleteUser);
+// router.delete("/net-remove/:id", deleteUser);
 router.get("/get-all-users", getAllUsers);
 
 router.get("/api/stripe/account", stripeAccount);
+
+router.post("/forget-password", forgetPassword);
+router.put("/reset-password/:token", resetPassword);
+router.post("/refreshToken", refreshAccessToken);
 
 export default router;

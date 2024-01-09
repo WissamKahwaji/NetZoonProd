@@ -19,6 +19,7 @@ import { News } from "../models/news/newsModel.js";
 import { Comment } from "../models/news/comment_model.js";
 import { DealsItems } from "../models/deals/dealsItemsModel.js";
 import { DealsCategories } from "../models/deals/dealsCategoriesModel.js";
+import nodemailer from "nodemailer";
 // import passport from "passport";
 // var GoogleStrategy = require("passport-google-oauth2").Strategy;
 
@@ -53,6 +54,37 @@ const key = "otp-secret-key";
 
 // QB.init('101248', '7QsUQCOppNXAmTq', 's4XksyBADdYYkPa', '6Ks95ZqZu8PNbwv4Yvz9');
 
+export const refreshAccessToken = async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const decodedData = jwt.verify(token, process.env.JWT_REFRESH_TOKEN);
+
+    const user = await userModel.findOne({ _id: decodedData.id });
+
+    if (!user) {
+      return res.status(401).json({ message: "Invalid refresh token" });
+    }
+
+    const newAccessToken = jwt.sign(
+      { email: user.email, id: user._id },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: "7d" }
+    );
+
+    res.status(200).json({
+      refreshToken: newAccessToken,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export const signin = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -76,11 +108,19 @@ export const signin = async (req, res) => {
       process.env.JWT_SECRET_KEY,
       { expiresIn: "7d" }
     );
+    const refreshToken = jwt.sign(
+      { email: existingUser.email, id: existingUser._id },
+      process.env.JWT_REFRESH_TOKEN,
+      { expiresIn: "1y" }
+    );
+    existingUser.refreshToken = refreshToken;
+    await existingUser.save();
     // existingUser = existingUser.select('-password');
     res.status(200).json({
       result: existingUser,
       message: "LogIn Successfuled",
       token: token,
+      refreshToken: refreshToken,
     });
   } catch (error) {
     console.log(error);
@@ -130,40 +170,40 @@ export const oAuthSignIn = async (req, res) => {
         title,
         country,
       } = req.body;
-      const coverPhoto = req.files["coverPhoto"]
-        ? req.files["coverPhoto"][0]
-        : null;
-      const frontIdPhoto = req.files["frontIdPhoto"]
-        ? req.files["frontIdPhoto"][0]
-        : null;
-      const backIdPhoto = req.files["backIdPhoto"]
-        ? req.files["backIdPhoto"][0]
-        : null;
-      const tradeLicensePhoto = req.files["tradeLicensePhoto"]
-        ? req.files["tradeLicensePhoto"][0]
-        : null;
-      const deliveryPermitPhoto = req.files["deliveryPermitPhoto"]
-        ? req.files["deliveryPermitPhoto"][0]
-        : null;
+      // const coverPhoto = req.files["coverPhoto"]
+      //   ? req.files["coverPhoto"][0]
+      //   : null;
+      // const frontIdPhoto = req.files["frontIdPhoto"]
+      //   ? req.files["frontIdPhoto"][0]
+      //   : null;
+      // const backIdPhoto = req.files["backIdPhoto"]
+      //   ? req.files["backIdPhoto"][0]
+      //   : null;
+      // const tradeLicensePhoto = req.files["tradeLicensePhoto"]
+      //   ? req.files["tradeLicensePhoto"][0]
+      //   : null;
+      // const deliveryPermitPhoto = req.files["deliveryPermitPhoto"]
+      //   ? req.files["deliveryPermitPhoto"][0]
+      //   : null;
 
-      const coverUrlImage = coverPhoto
-        ? "https://back.netzoon.com/" + coverPhoto.path.replace(/\\/g, "/")
-        : "https://i.imgur.com/EOWYmuQ.png";
+      // const coverUrlImage = coverPhoto
+      //   ? "https://back.netzoon.com/" + coverPhoto.path.replace(/\\/g, "/")
+      //   : "https://i.imgur.com/EOWYmuQ.png";
 
-      const frontIdPhotoUrlImage = frontIdPhoto
-        ? "https://back.netzoon.com/" + frontIdPhoto.path.replace(/\\/g, "/")
-        : null;
-      const backIdPhotoUrlImage = backIdPhoto
-        ? "https://back.netzoon.com/" + backIdPhoto.path.replace(/\\/g, "/")
-        : null;
-      const tradeLicensePhotoUrl = tradeLicensePhoto
-        ? "https://back.netzoon.com/" +
-          tradeLicensePhoto.path.replace(/\\/g, "/")
-        : null;
-      const deliveryPermitPhotoUrl = deliveryPermitPhoto
-        ? "https://back.netzoon.com/" +
-          deliveryPermitPhoto.path.replace(/\\/g, "/")
-        : null;
+      // const frontIdPhotoUrlImage = frontIdPhoto
+      //   ? "https://back.netzoon.com/" + frontIdPhoto.path.replace(/\\/g, "/")
+      //   : null;
+      // const backIdPhotoUrlImage = backIdPhoto
+      //   ? "https://back.netzoon.com/" + backIdPhoto.path.replace(/\\/g, "/")
+      //   : null;
+      // const tradeLicensePhotoUrl = tradeLicensePhoto
+      //   ? "https://back.netzoon.com/" +
+      //     tradeLicensePhoto.path.replace(/\\/g, "/")
+      //   : null;
+      // const deliveryPermitPhotoUrl = deliveryPermitPhoto
+      //   ? "https://back.netzoon.com/" +
+      //     deliveryPermitPhoto.path.replace(/\\/g, "/")
+      //   : null;
 
       const newUser = await userModel.create({
         username,
@@ -185,12 +225,12 @@ export const oAuthSignIn = async (req, res) => {
         slogn: slogn,
         link: link,
         profilePhoto: profilePhoto,
-        coverPhoto: coverUrlImage,
+        // coverPhoto: coverUrlImage,
 
-        frontIdPhoto: frontIdPhotoUrlImage,
-        backIdPhoto: backIdPhotoUrlImage,
-        tradeLicensePhoto: tradeLicensePhotoUrl,
-        deliveryPermitPhoto: deliveryPermitPhotoUrl,
+        // frontIdPhoto: frontIdPhotoUrlImage,
+        // backIdPhoto: backIdPhotoUrlImage,
+        // tradeLicensePhoto: tradeLicensePhotoUrl,
+        // deliveryPermitPhoto: deliveryPermitPhotoUrl,
         country: country,
 
         deliveryType: deliveryType,
@@ -203,13 +243,18 @@ export const oAuthSignIn = async (req, res) => {
         floorNum: floorNum,
         locationType: locationType,
       });
+      const refreshToken = jwt.sign(
+        { email: newUser.email, id: newUser._id },
+        process.env.JWT_REFRESH_TOKEN,
+        { expiresIn: "1y" }
+      );
       newUser.isFreeZoon = isFreeZoon ?? false;
       newUser.isService = isService ?? false;
       newUser.isSelectable = isSelectable ?? false;
       newUser.deliverable = deliverable ?? false;
       newUser.isThereWarehouse = isThereWarehouse ?? false;
       newUser.isThereFoodsDelivery = isThereFoodsDelivery ?? false;
-
+      newUser.refreshToken = refreshToken;
       if (userType == "car" || "planes" || "sea_companies" || "real_estate") {
         const subscriptionExpireDate = new Date();
         subscriptionExpireDate.setDate(subscriptionExpireDate.getDate() + 30);
@@ -233,6 +278,7 @@ export const oAuthSignIn = async (req, res) => {
           });
         }
       }
+      await newUser.save();
       const token = jwt.sign(
         { email: newUser.email, id: newUser._id },
         process.env.JWT_SECRET_KEY,
@@ -243,6 +289,7 @@ export const oAuthSignIn = async (req, res) => {
         result: newUser,
         message: "User created",
         token: token,
+        refreshToken: refreshToken,
       });
     } else {
       const token = jwt.sign(
@@ -250,11 +297,19 @@ export const oAuthSignIn = async (req, res) => {
         process.env.JWT_SECRET_KEY,
         { expiresIn: "7d" }
       );
+      const refreshToken = jwt.sign(
+        { email: existingUser.email, id: existingUser._id },
+        process.env.JWT_REFRESH_TOKEN,
+        { expiresIn: "1y" }
+      );
+      existingUser.refreshToken = refreshToken;
+      await existingUser.save();
       console.log(existingUser);
       res.status(201).json({
         result: existingUser,
         message: "LogIn Successfuled",
         token: token,
+        refreshToken: refreshToken,
       });
     }
   } catch (error) {
@@ -280,10 +335,18 @@ export const changeAccount = async (req, res) => {
       process.env.JWT_SECRET_KEY,
       { expiresIn: "7d" }
     );
+    const refreshToken = jwt.sign(
+      { email: existingUser.email, id: existingUser._id },
+      process.env.JWT_REFRESH_TOKEN,
+      { expiresIn: "1y" }
+    );
+    existingUser.refreshToken = refreshToken;
+    await existingUser.save();
     res.status(200).json({
       result: existingUser,
       message: "LogIn Successfuled",
       token: token,
+      refreshToken: refreshToken,
     });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong" });
@@ -447,9 +510,9 @@ export const signUp = async (req, res) => {
     if (isSelectable) {
       newUser.isSelectable = isSelectable ?? false;
     }
-    if (deliverable) {
-      newUser.deliverable = deliverable ?? false;
-    }
+    // if (deliverable != null) {
+    //   newUser.deliverable = deliverable ?? false;
+    // }
     if (isThereWarehouse) {
       newUser.isThereWarehouse = isThereWarehouse ?? false;
     }
@@ -472,6 +535,12 @@ export const signUp = async (req, res) => {
       process.env.JWT_SECRET_KEY,
       { expiresIn: "7d" }
     );
+    const refreshToken = jwt.sign(
+      { email: newUser.email, id: newUser._id },
+      process.env.JWT_REFRESH_TOKEN,
+      { expiresIn: "1y" }
+    );
+    newUser.refreshToken = refreshToken;
     if (userType === "factory") {
       const factoryCategory = await FactoryCategories.findOneAndUpdate(
         { title: title }, // Update this condition based on your requirements
@@ -505,11 +574,13 @@ export const signUp = async (req, res) => {
       await existingUser.save();
       await newUser.save();
     }
+    await newUser.save();
     console.log("succccccccccccccccccccccccc");
     return res.status(201).json({
       result: newUser,
       message: "User created",
       token: token,
+      refreshToken: refreshToken,
     });
   } catch (error) {
     console.log(error);
@@ -534,6 +605,10 @@ export const addAccount = async (req, res) => {
 
     if (!existingUser) {
       return res.status(404).json({ message: "User not found" });
+    }
+
+    if (req.userId != existingUser._id) {
+      return res.status(403).json("Error in Authurization");
     }
 
     const newUser = await userModel.findOne({ username });
@@ -586,6 +661,10 @@ export const changePassword = async (req, res) => {
     const user = await userModel.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
+    }
+
+    if (req.userId != userId) {
+      return res.status(403).json("Error in Authurization");
     }
 
     const isPasswordCorrect = await bcrypt.compare(
@@ -687,6 +766,9 @@ export const addProductToFavorites = async (req, res) => {
   try {
     console.error("11111111");
     // Find the user by userId
+    if (req.userId != userId) {
+      return res.status(403).json("Error in Authurization");
+    }
     const user = await userModel.findById(userId);
     console.error("22222222");
     if (!user) {
@@ -719,7 +801,10 @@ export const removeProductFromFavorites = async (req, res) => {
   const { userId, productId } = req.body;
 
   try {
-    // Find the user by userId
+    if (req.userId != userId) {
+      return res.status(403).json("Error in Authurization");
+    }
+
     const user = await userModel.findById(userId);
 
     if (!user) {
@@ -754,6 +839,9 @@ export const clearFav = async (req, res) => {
   const { userId } = req.body;
 
   try {
+    if (req.userId != userId) {
+      return res.status(403).json("Error in Authurization");
+    }
     const user = await userModel.findById(userId);
 
     if (!user) {
@@ -889,6 +977,10 @@ export const EditUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    if (req.userId != userId) {
+      return res.status(403).json("Error in Authurization");
+    }
+
     // Check if a profile photo is included in the request
     if (req.files && req.files["profilePhoto"]) {
       const profilePhoto = req.files["profilePhoto"][0];
@@ -924,8 +1016,8 @@ export const EditUser = async (req, res) => {
         deliveryPermitPhoto.path.replace(/\\/g, "/");
     }
 
-    user.username = username;
-    user.email = email;
+    if (username) user.username = username;
+    if (email) user.email = email;
     user.firstMobile = firstMobile;
     user.secondeMobile = secondeMobile;
     user.thirdMobile = thirdMobile;
@@ -973,7 +1065,10 @@ export const EditUser = async (req, res) => {
 
     const updatedUser = await user.save();
 
-    res.status(200).json("User Updated Successfully");
+    res.status(200).json({
+      message: "Updated user successfully",
+      result: updatedUser,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
@@ -1018,8 +1113,12 @@ export const addProductsToSelectedProducts = async (req, res) => {
 
     const user = await userModel.findById(userId);
     console.log(productIds);
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
+    }
+    if (req.userId != userId) {
+      return res.status(403).json("Error in Authurization");
     }
     const productIdsArray = Array.isArray(productIds)
       ? productIds
@@ -1055,7 +1154,9 @@ export const deleteProductFromSelectedProducts = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
+    if (req.userId != userId) {
+      return res.status(403).json("Error in Authurization");
+    }
     // Remove the product ID from the user's selectedProducts
     const index = user.selectedProducts.indexOf(productId);
     if (index !== -1) {
@@ -1292,6 +1393,9 @@ export const deleteAccount = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    if (req.userId != userId) {
+      return res.status(403).json("Error in Authurization");
+    }
     const userProducts = await Product.find({ owner: userId });
 
     for (const product of userProducts) {
@@ -1340,6 +1444,81 @@ export const deleteAccount = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+export const forgetPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json("User not found");
+    }
+    const resetToken = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET_KEY,
+      {
+        expiresIn: "1h",
+      }
+    );
+    user.resetToken = resetToken;
+    user.resetTokenExpiration = Date.now() + 3600000;
+    await user.save();
+    const transporter = nodemailer.createTransport({
+      port: 465, // true for 465, false for other ports
+      host: "smtp.gmail.com",
+      auth: {
+        user: "Netzoon.2023@gmail.com",
+        pass: "gncp ypax rnfm apxh",
+      },
+      secure: true,
+    });
+    const resetLink = `https://netzoon.com/reset-password/${resetToken}`;
+
+    const mailOptions = {
+      from: "Netzoon.2023@gmail.com",
+      to: email,
+      subject: "Password Reset",
+      html: `Click <a href="${resetLink}">here</a> to reset your password.`,
+    };
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error(error);
+        res.status(500).send("Internal Server Error");
+      } else {
+        console.log("Email sent: " + info.response);
+        return res.status(200).json("Reset email sent successfully");
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  const { password } = req.body;
+  const { token } = req.params;
+  try {
+    console.log("11111");
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    const user = await userModel.findOne({
+      _id: decodedToken.userId,
+      resetToken: token,
+      resetTokenExpiration: { $gt: Date.now() },
+    });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+    const hashedPassword = await bcrypt.hash(password, 12);
+    user.password = hashedPassword;
+    user.resetToken = undefined;
+    user.resetTokenExpiration = undefined;
+    await user.save();
+    return res.status(201).json({ message: "Password reset successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 

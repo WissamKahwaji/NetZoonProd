@@ -430,6 +430,11 @@ export const editProduct = async (req, res) => {
       color,
       discountPercentage,
     } = req.body;
+
+    const productdata = await Product.findById(productId);
+    if (req.userId != productdata.owner) {
+      return res.status(403).json("Error in Authurization");
+    }
     let discountedPrice = price;
     if (discountPercentage != null) {
       if (
@@ -535,7 +540,9 @@ export const deleteProduct = async (req, res) => {
     if (!deletedProduct) {
       return res.status(404).json({ message: "Product not found" });
     }
-
+    if (req.userId != deletedProduct.owner) {
+      return res.status(403).json("Error in Authurization");
+    }
     return res.status(200).json("success");
   } catch (error) {
     console.error(error);

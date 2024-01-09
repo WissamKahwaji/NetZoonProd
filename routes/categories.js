@@ -80,9 +80,9 @@ router.get("/local-company/get-services/:id", getCompanyServices);
 router.get("/services-categories", getServicesCategories);
 router.get("/services-by-category", getServicesByCategories);
 router.get("/local-company/get-service/:id", getServiceById);
-router.post("/local-company/add-service", addCompanyService);
-router.put("/local-company/edit-service/:id", editCompanyService);
-router.delete("/local-company/service/:id", deleteCompanyService);
+router.post("/local-company/add-service", auth, addCompanyService);
+router.put("/local-company/edit-service/:id", auth, editCompanyService);
+router.delete("/local-company/service/:id", auth, deleteCompanyService);
 router.post("/local-company/services/:id/rate", rateCompanyService);
 router.get("/local-company/services/:id/rating", getTotalRating);
 //govermental routes
@@ -102,8 +102,8 @@ router.get("/planes/getnewplanes", getAllNewPlans);
 router.get("/planes-companies", getPlanesCompanies),
   router.get("/sea-companies", getSeaCompanies),
   router.post("/vehicle/create-vehicle", createVehicle);
-router.put("/vehicle/edit-vehicle/:id", editVehicle);
-router.delete("/vehicle/:id", deleteVehicle);
+router.put("/vehicle/edit-vehicle/:id", auth, editVehicle);
+router.delete("/vehicle/:id", auth, deleteVehicle);
 router.get("/vehicle/:id", getVehicleById);
 router.get("/company-vehicles/:id", getCompaniesVehicles);
 router.put("/reset-vehicle-count/:userId", resetVehicleCount);
