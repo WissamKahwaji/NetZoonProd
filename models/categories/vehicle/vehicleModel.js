@@ -62,6 +62,7 @@ const VehicleSchema = mongoose.Schema(
     forWhat: String,
     regionalSpecs: String,
     aircraftType: String,
+    manufacturer: String,
     vehicleModel: String,
     maxSpeed: String,
     maxDistance: String,

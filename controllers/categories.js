@@ -591,6 +591,7 @@ export const createVehicle = async (req, res) => {
       forWhat,
       regionalSpecs,
       aircraftType,
+      manufacturer,
       vehicleModel,
       maxSpeed,
       maxDistance,
@@ -663,6 +664,7 @@ export const createVehicle = async (req, res) => {
       regionalSpecs,
     });
     if (aircraftType) newVehicle.aircraftType = aircraftType;
+    if (manufacturer) newVehicle.manufacturer = manufacturer;
     if (vehicleModel) newVehicle.vehicleModel = vehicleModel;
     if (maxSpeed) newVehicle.maxSpeed = maxSpeed;
     if (maxDistance) newVehicle.maxDistance = maxDistance;
