@@ -590,6 +590,12 @@ export const createVehicle = async (req, res) => {
       guarantee,
       forWhat,
       regionalSpecs,
+      aircraftType,
+      vehicleModel,
+      maxSpeed,
+      maxDistance,
+      shipType,
+      shipLength,
     } = req.body;
 
     const user = await userModel.findById(creator);
@@ -656,6 +662,12 @@ export const createVehicle = async (req, res) => {
       forWhat: forWhat,
       regionalSpecs,
     });
+    if (aircraftType) newVehicle.aircraftType = aircraftType;
+    if (vehicleModel) newVehicle.vehicleModel = vehicleModel;
+    if (maxSpeed) newVehicle.maxSpeed = maxSpeed;
+    if (maxDistance) newVehicle.maxDistance = maxDistance;
+    if (shipType) newVehicle.shipType = shipType;
+    if (shipLength) newVehicle.shipLength = shipLength;
 
     if (req.files["carimages"]) {
       const carImages = req.files["carimages"];

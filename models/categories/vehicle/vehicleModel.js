@@ -61,6 +61,12 @@ const VehicleSchema = mongoose.Schema(
     guarantee: Boolean,
     forWhat: String,
     regionalSpecs: String,
+    aircraftType: String,
+    vehicleModel: String,
+    maxSpeed: String,
+    maxDistance: String,
+    shipType: String,
+    shipLength: String,
 
     country: {
       type: String,
