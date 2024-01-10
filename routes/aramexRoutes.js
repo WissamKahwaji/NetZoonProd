@@ -12,5 +12,5 @@ const router = express.Router();
 router.post("/calculateRate", auth, calculateRateController);
 router.post("/createPickUp", auth, createPickUpController);
 router.post("/createShipment", auth, createShipmentController);
-router.post("/fetchCities", auth, fetchCities);
+router.post("/fetchCities", fetchCities);
 export default router;
