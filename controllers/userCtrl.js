@@ -580,7 +580,7 @@ export const signUp = async (req, res) => {
       await existingUser.save();
       await newUser.save();
     }
-    await newUser.save();
+    // await newUser.save();
     console.log("succccccccccccccccccccccccc");
     return res.status(201).json({
       result: newUser,
