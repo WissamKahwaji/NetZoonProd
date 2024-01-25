@@ -263,21 +263,34 @@ export const getUserDeals = async (req, res) => {
 export const savePurchDeal = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { deals, grandTotal, shippingAddress, mobile } = req.body;
+    const { buyerId, deal, grandTotal, shippingAddress, mobile } = req.body;
     const user = await userModel.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
     const purchDealsModel = new PurchDeals({
       userId: userId,
-      deals,
+      buyerId,
+      deal,
       grandTotal,
       shippingAddress,
       mobile,
     });
+
+    const dealItem = await DealsItems.findById(deal);
     const response = await purchDealsModel.save();
+    let updatedBalance;
+    let calculateBalance;
+    const netzoonBalance = user.netzoonBalance;
+    calculateBalance =
+      dealItem.currentPrice - (5 * dealItem.currentPrice) / 100;
+    updatedBalance = netzoonBalance + calculateBalance;
+
+    await userModel.findByIdAndUpdate(userId, {
+      netzoonBalance: updatedBalance,
+    });
     console.log(response);
-    return res.status(200).json(response);
+    return res.status(200).json("Purshed deal Saved Successfully");
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });

@@ -259,7 +259,7 @@ export const oAuthSignIn = async (req, res) => {
         const subscriptionExpireDate = new Date();
         subscriptionExpireDate.setDate(subscriptionExpireDate.getDate() + 30);
         newUser.subscriptionExpireDate = subscriptionExpireDate;
-        newUser.save();
+        // await newUser.save();
       }
 
       if (userType === "factory") {
@@ -596,11 +596,24 @@ export const signUp = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await userModel.find();
-    res.status(200).json(users);
+    const { name } = req.query;
+
+    let users;
+
+    if (name) {
+      // If 'name' parameter is present, perform search
+      users = await userModel.find({
+        username: { $regex: new RegExp(name, "i") },
+      });
+    } else {
+      // If 'name' parameter is not present, get all users
+      users = await userModel.find();
+    }
+
+    return res.status(200).json(users);
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Error on get all users" });
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -1531,6 +1544,19 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// export const searchOnUser = async (req, res) => {
+//   try {
+//     const { name } = req.query;
+//     const users = await userModel.find({
+//       username: { $regex: new RegExp(name, "i") },
+//     });
+//     return res.status(200).json(users);
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ message: "Internal server error" });
+//   }
+// };
 
 // Upload the profile photo and banner photo using multer
 

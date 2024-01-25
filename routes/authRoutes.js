@@ -29,6 +29,7 @@ import {
   refreshAccessToken,
   removeProductFromFavorites,
   resetPassword,
+  // searchOnUser,
   signUp,
   signin,
   toggleFollow,
@@ -126,7 +127,7 @@ router.post("/:id/rate", rateUser);
 router.get("/:id/rating", getUserTotalRating);
 // router.delete("/net-remove/:id", deleteUser);
 router.get("/get-all-users", getAllUsers);
-
+// router.get("/search", searchOnUser);
 router.get("/api/stripe/account", stripeAccount);
 
 router.post("/forget-password", forgetPassword);

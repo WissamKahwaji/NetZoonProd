@@ -1,40 +1,35 @@
 import mongoose from "mongoose";
 
-
-const purchDealsSchema = mongoose.Schema({
+const purchDealsSchema = mongoose.Schema(
+  {
     userId: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
-    deals: [
-        {
-            deals: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "DealsItems",
-                required: true,
-            },
-            amount: {
-                type: Number,
-                required: true,
-            },
-        }
-    ],
+    buyerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    deal: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DealsItems",
+      required: true,
+    },
     grandTotal: {
-        type: Number,
-        required: true,
+      type: Number,
+      required: true,
     },
     shippingAddress: {
-        type: String,
+      type: String,
     },
     mobile: {
-        type: String,
+      type: String,
     },
-},
-    {
-        timestamps: true,
-    }
+  },
+  {
+    timestamps: true,
+  }
 );
 
-
-
-export const PurchDeals = mongoose.model('PurchDeals', purchDealsSchema);
+export const PurchDeals = mongoose.model("PurchDeals", purchDealsSchema);
