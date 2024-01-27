@@ -150,19 +150,29 @@ export const createAds = async (req, res) => {
     color,
     guarantee,
     contactNumber,
+    imagePath,
+    productId,
+    forPurchase,
   } = req.body;
 
-  const image = req.files["image"][0];
-  if (!image) {
-    return res.status(404).json({ message: "Attached file is not an image." });
-  }
-  const urlImage =
-    "https://www.netzoonback.siidevelopment.com/" +
-    image.path.replace(/\\/g, "/");
-
-  const ownerId = new mongoose.Types.ObjectId(owner);
-
   try {
+    let urlImage;
+    if (imagePath) {
+      urlImage = imagePath;
+    } else {
+      const image = req.files["image"][0];
+      if (!image) {
+        return res
+          .status(404)
+          .json({ message: "Attached file is not an image." });
+      }
+      urlImage =
+        "https://www.netzoonback.siidevelopment.com/" +
+        image.path.replace(/\\/g, "/");
+    }
+
+    const ownerId = new mongoose.Types.ObjectId(owner);
+
     const newAds = new Advertisement({
       owner: ownerId,
       advertisingTitle,
@@ -181,6 +191,7 @@ export const createAds = async (req, res) => {
       color,
       guarantee,
       contactNumber,
+      forPurchase,
     });
     if (req.files["advertisingImageList"]) {
       const adsImages = req.files["advertisingImageList"];
@@ -212,10 +223,12 @@ export const createAds = async (req, res) => {
         video.path.replace(/\\/g, "/");
       newAds.advertisingVedio = urlVideo;
     }
-
+    if (productId) newAds.productId = productId;
+    if (forPurchase) newAds.forPurchase = forPurchase;
     const savedAds = await newAds.save();
     res.status(201).json(savedAds._id);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: error.message });
   }
 };

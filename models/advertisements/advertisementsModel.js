@@ -1,31 +1,32 @@
 import mongoose from "mongoose";
 
-const advertisementSchema = mongoose.Schema({
+const advertisementSchema = mongoose.Schema(
+  {
     owner: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
     purchasable: Boolean,
     advertisingTitle: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     advertisingStartDate: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     advertisingEndDate: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     advertisingDescription: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     advertisingImage: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     type: String,
     category: String,
@@ -34,41 +35,51 @@ const advertisementSchema = mongoose.Schema({
     contactNumber: String,
 
     advertisingViews: {
-        type: Number,
-
+      type: Number,
     },
     advertisingYear: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     advertisingLocation: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     advertisingPrice: {
-        type: Number,
-        required: true,
+      type: Number,
+      required: true,
     },
     advertisingImageList: [{ type: String }],
     advertisingVedio: String,
     advertisingType: {
-        type: String,
-        required: true,
-        enum: ['company', 'car', 'planes', 'real_estate', 'product', 'service']
+      type: String,
+      required: true,
+      enum: ["company", "car", "planes", "real_estate", "product", "service"],
     },
-    adsVisitors: [{
+    adsVisitors: [
+      {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        default: []
-    }],
+        ref: "User",
+        default: [],
+      },
+    ],
     adsViews: {
-        type: Number,
-        default: 0
+      type: Number,
+      default: 0,
     },
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Products",
+    },
+    forPurchase: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { timestamps: true }
+);
 
-}, { timestamps: true });
-
-
-
-
-export const Advertisement = mongoose.model('Advertisements', advertisementSchema);
+export const Advertisement = mongoose.model(
+  "Advertisements",
+  advertisementSchema
+);
