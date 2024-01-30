@@ -54,7 +54,17 @@ const advertisementSchema = mongoose.Schema(
     advertisingType: {
       type: String,
       required: true,
-      enum: ["company", "car", "planes", "real_estate", "product", "service"],
+      enum: [
+        "company",
+        "car",
+        "planes",
+        "real_estate",
+        "product",
+        "service",
+        "sea_companies",
+        "delivery_service",
+        "user",
+      ],
     },
     adsVisitors: [
       {
@@ -67,9 +77,8 @@ const advertisementSchema = mongoose.Schema(
       type: Number,
       default: 0,
     },
-    productId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Products",
+    itemId: {
+      type: String,
     },
     forPurchase: {
       type: Boolean,

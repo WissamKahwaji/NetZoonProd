@@ -151,7 +151,7 @@ export const createAds = async (req, res) => {
     guarantee,
     contactNumber,
     imagePath,
-    productId,
+    itemId,
     forPurchase,
   } = req.body;
 
@@ -223,7 +223,7 @@ export const createAds = async (req, res) => {
         video.path.replace(/\\/g, "/");
       newAds.advertisingVedio = urlVideo;
     }
-    if (productId) newAds.productId = productId;
+    if (itemId) newAds.itemId = itemId;
     if (forPurchase) newAds.forPurchase = forPurchase;
     const savedAds = await newAds.save();
     res.status(201).json(savedAds._id);
