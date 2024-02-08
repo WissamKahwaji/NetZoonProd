@@ -582,6 +582,87 @@ export const signUp = async (req, res) => {
     }
     // await newUser.save();
     console.log("succccccccccccccccccccccccc");
+    const transporter = nodemailer.createTransport({
+      host: "smtp.titan.email",
+      secure: true,
+      secureConnection: false,
+      tls: {
+        ciphers: "SSLv3",
+      },
+      requireTLS: true,
+      port: 465,
+      debug: true,
+      connectionTimeout: 10000,
+      auth: {
+        user: "info@netzoon.com",
+        pass: "info@Passw_321",
+      },
+    });
+    const mailOptions = {
+      from: "info@netzoon.com",
+      to: email,
+      subject: "Thank you for your interest in Netzoon",
+      html: `<!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Welcome to Netzoon Marketplace</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+          }
+          .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+          }
+          h1 {
+            text-align: center;
+            color: #333;
+          }
+          p {
+            color: #666;
+          }
+          .btn {
+            display: inline-block;
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>Welcome to Netzoon Marketplace!</h1>
+          <p>Dear ${username},</p>
+          <p>Thank you for joining Netzoon, your gateway to a world of opportunities. We are thrilled to have you on board.</p>
+          <p>At Netzoon, we strive to connect buyers and sellers seamlessly, making your experience smooth and rewarding.</p>
+          <p>Feel free to explore our marketplace and discover a wide range of products and services offered by our trusted sellers.</p>
+          <p>Your Username is : ${username},</p>
+          <p>Your Email is : ${email},</p>          
+          <p>If you have any questions or need assistance, don't hesitate to reach out to our support team.</p>
+          <p>Happy shopping!</p>
+          <p>Sincerely,</p>
+          <p>The Netzoon Team</p>
+        </div>
+      </body>
+      </html>`,
+    };
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error(error);
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    });
     return res.status(201).json({
       result: newUser,
       message: "User created",
@@ -1488,18 +1569,25 @@ export const forgetPassword = async (req, res) => {
     user.resetTokenExpiration = Date.now() + 3600000;
     await user.save();
     const transporter = nodemailer.createTransport({
-      port: 465, // true for 465, false for other ports
-      host: "smtp.gmail.com",
-      auth: {
-        user: "Netzoon.2023@gmail.com",
-        pass: "gncp ypax rnfm apxh",
-      },
+      host: "smtp.titan.email",
       secure: true,
+      secureConnection: false,
+      tls: {
+        ciphers: "SSLv3",
+      },
+      requireTLS: true,
+      port: 465,
+      debug: true,
+      connectionTimeout: 10000,
+      auth: {
+        user: "info@netzoon.com",
+        pass: "info@Passw_321",
+      },
     });
-    const resetLink = `https://netzoon.com/reset-password/${resetToken}`;
+    const resetLink = `https://www.netzoon.com/reset-password/${resetToken}`;
 
     const mailOptions = {
-      from: "Netzoon.2023@gmail.com",
+      from: "info@netzoon.com",
       to: email,
       subject: "Password Reset",
       html: `Click <a href="${resetLink}">here</a> to reset your password.`,
@@ -1510,6 +1598,7 @@ export const forgetPassword = async (req, res) => {
         res.status(500).send("Internal Server Error");
       } else {
         console.log("Email sent: " + info.response);
+        console.log("Reset email sent successfully");
         return res.status(200).json("Reset email sent successfully");
       }
     });
