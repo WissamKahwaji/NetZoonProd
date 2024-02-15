@@ -38,8 +38,8 @@ import helmet from "helmet";
 // import stripeAccount from './services/stripe_service.js';
 
 // import { resetCounts } from './scheduled-tasks/resetCounts.js';
-import cron from "node-cron";
-import { deleteFinishedAds } from "./scheduled-tasks/delete_finished_ads.js";
+// import cron from "node-cron";
+// import { deleteFinishedAds } from "./scheduled-tasks/delete_finished_ads.js";
 
 const app = express();
 dotenv.config();
@@ -152,7 +152,7 @@ app.use("/delivery", deliveryServiceRoutes);
 // app.use(stripeAccount);
 // app.use('/api/stripe/account',stripeAccount);
 // cron.schedule('0 0 * * *', resetCounts);
-cron.schedule("0 0 * * *", deleteFinishedAds);
+// cron.schedule("0 0 * * *", deleteFinishedAds);
 app.use("/order", orderRoutes);
 app.use("/aramex", aramexRouter);
 

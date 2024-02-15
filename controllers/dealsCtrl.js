@@ -22,15 +22,16 @@ export const getAllDealsCategories = async (req, res) => {
 export const getAllDeals = async (req, res) => {
   try {
     const { country } = req.query;
+    const currentDate = new Date();
 
     let dealsItems;
     if (country) {
-      dealsItems = await DealsItems.find({ country: country }).populate(
-        "owner",
-        "username userType"
-      );
+      dealsItems = await DealsItems.find({
+        country: country,
+        endDate: { $gte: currentDate },
+      }).populate("owner", "username userType");
     } else {
-      dealsItems = await DealsItems.find();
+      dealsItems = await DealsItems.find({ endDate: { $gte: currentDate } });
     }
 
     // const dealsItems = await DealsItems.find({ country: country });
@@ -49,10 +50,12 @@ export const getAllDeals = async (req, res) => {
 export const getAllDealsByCat = async (req, res) => {
   try {
     const { country, category, companyName, minPrice, maxPrice } = req.query;
+    const currentDate = new Date();
 
     const filterCriteria = {
       category: category,
       country: country,
+      endDate: { $gte: currentDate },
     };
 
     if (companyName) {

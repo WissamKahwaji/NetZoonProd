@@ -16,7 +16,11 @@ export const getAdvertisements = async (req, res) => {
       type,
     } = req.query;
 
-    const query = {};
+    const currentDate = new Date();
+
+    const query = {
+      advertisingEndDate: { $gt: currentDate.toISOString() },
+    };
 
     if (priceMin !== undefined && priceMax !== undefined) {
       query.advertisingPrice = {
@@ -113,11 +117,14 @@ export const getAdvertisementById = async (req, res) => {
 };
 
 export const getAdvertisementByType = async (req, res) => {
-  const userAdvertisingType = req.params.userAdvertisingType; // Retrieve the userAdvertisingType from req.params
+  const userAdvertisingType = req.params.userAdvertisingType;
+
+  const currentDate = new Date();
 
   try {
     const data = await Advertisement.find({
       advertisingType: userAdvertisingType,
+      advertisingEndDate: { $gt: currentDate.toISOString() },
     }).populate("owner", "username userType");
     if (!data) {
       return res.status(404).json({ message: "no Data Found" });

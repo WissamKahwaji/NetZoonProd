@@ -34,7 +34,7 @@
     "passport-google-oauth2": "^0.2.0",
     "quickblox": "^2.15.5",
     "stripe": "^12.4.0",
-    "twilio": "^4.11.1"
+    "twilio": "^4.21.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
