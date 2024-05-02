@@ -4,6 +4,8 @@ import { DealsItems } from "../models/deals/dealsItemsModel.js";
 import { PurchDeals } from "../models/deals/purch_deal_model.js";
 import userModel from "../models/userModel.js";
 
+const PAGINATION_LIMIT = 10;
+
 export const getAllDealsCategories = async (req, res) => {
   try {
     const dealsCat = await DealsCategories.find({});
@@ -21,7 +23,9 @@ export const getAllDealsCategories = async (req, res) => {
 
 export const getAllDeals = async (req, res) => {
   try {
-    const { country } = req.query;
+    const { country, page } = req.query;
+
+    const pageNumber = parseInt(page, 10) || 1;
     const currentDate = new Date();
 
     let dealsItems;
@@ -29,7 +33,10 @@ export const getAllDeals = async (req, res) => {
       dealsItems = await DealsItems.find({
         country: country,
         endDate: { $gte: currentDate },
-      }).populate("owner", "username userType");
+      })
+        .populate("owner", "username userType")
+        .skip((pageNumber - 1) * PAGINATION_LIMIT)
+        .limit(PAGINATION_LIMIT);
     } else {
       dealsItems = await DealsItems.find({ endDate: { $gte: currentDate } });
     }
@@ -49,7 +56,9 @@ export const getAllDeals = async (req, res) => {
 
 export const getAllDealsByCat = async (req, res) => {
   try {
-    const { country, category, companyName, minPrice, maxPrice } = req.query;
+    const { country, category, companyName, minPrice, maxPrice, page } =
+      req.query;
+    const pageNumber = parseInt(page, 10) || 1;
     const currentDate = new Date();
 
     const filterCriteria = {
@@ -73,10 +82,10 @@ export const getAllDealsByCat = async (req, res) => {
       filterCriteria.currentPrice = { $lte: parseFloat(maxPrice) };
     }
 
-    const dealsItems = await DealsItems.find(filterCriteria).populate(
-      "owner",
-      "username userType"
-    );
+    const dealsItems = await DealsItems.find(filterCriteria)
+      .populate("owner", "username userType")
+      .skip((pageNumber - 1) * PAGINATION_LIMIT)
+      .limit(PAGINATION_LIMIT);
 
     if (!dealsItems || dealsItems.length === 0) {
       return res.status(404).json({ message: "No data found" });

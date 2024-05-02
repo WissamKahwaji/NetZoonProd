@@ -1,20 +1,21 @@
 import { RealEstate } from "../models/real_estate/real_estate_model.js";
 import userModel from "../models/userModel.js";
-
+const PAGINATION_LIMIT = 10;
 export const getAllRealEstate = async (req, res) => {
   try {
-    const { country } = req.query;
+    const { country, page } = req.query;
+    const pageNumber = parseInt(page, 10) || 1;
     let realEstates;
     if (country) {
-      realEstates = await RealEstate.find({ country: country }).populate(
-        "createdBy",
-        "username firstMobile profilePhoto"
-      );
+      realEstates = await RealEstate.find({ country: country })
+        .populate("createdBy", "username firstMobile profilePhoto")
+        .skip((pageNumber - 1) * PAGINATION_LIMIT)
+        .limit(PAGINATION_LIMIT);
     } else {
-      realEstates = await RealEstate.find().populate(
-        "createdBy",
-        "username firstMobile profilePhoto"
-      );
+      realEstates = await RealEstate.find()
+        .populate("createdBy", "username firstMobile profilePhoto")
+        .skip((pageNumber - 1) * PAGINATION_LIMIT)
+        .limit(PAGINATION_LIMIT);
     }
     // const realEstates = await RealEstate.find().populate('createdBy', 'username');
     return res.json(realEstates);
@@ -239,16 +240,22 @@ export const deleteRealEstate = async (req, res) => {
 
 export const getRealEstateCompanies = async (req, res) => {
   try {
-    const { country } = req.query;
-
+    const { country, page } = req.query;
+    const pageNumber = parseInt(page, 10) || 1;
     let realEstateCompanies;
     if (country) {
-      realEstateCompanies = await userModel.find({
-        userType: "real_estate",
-        country: country,
-      });
+      realEstateCompanies = await userModel
+        .find({
+          userType: "real_estate",
+          country: country,
+        })
+        .skip((pageNumber - 1) * PAGINATION_LIMIT)
+        .limit(PAGINATION_LIMIT);
     } else {
-      realEstateCompanies = await userModel.find({ userType: "real_estate" });
+      realEstateCompanies = await userModel
+        .find({ userType: "real_estate" })
+        .skip((pageNumber - 1) * PAGINATION_LIMIT)
+        .limit(PAGINATION_LIMIT);
     }
     // const realEstateCompanies = await userModel.find({ userType: 'real_estate' });
 

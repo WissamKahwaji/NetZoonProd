@@ -3,6 +3,7 @@ import { check } from "express-validator";
 import {
   EditUser,
   addAccount,
+  addNewUserAddress,
   addNumberOfVisitors,
   addProductToFavorites,
   addProductsToSelectedProducts,
@@ -16,11 +17,14 @@ import {
   getAccountByEmail,
   getAllFavorites,
   getAllUsers,
+  getRecommendedProductsForUser,
   getSelectedProducts,
+  getUserAddresses,
   getUserById,
   getUserByType,
   getUserFollowers,
   getUserFollowings,
+  getUserInterestCategories,
   getUserTotalRating,
   getVisitors,
   oAuthSignIn,
@@ -41,17 +45,12 @@ import auth from "../middlewares/auth.js";
 const router = express.Router();
 
 const userType = [
-  "local_company",
   "user",
   "freezone",
   "factory",
-  "car",
-  "planes",
-  "sea_companies",
-  "news_agency",
-  "real_estate",
-  "trader",
-  "delivery_company",
+  "local_company",
+  "merchant",
+  "advertiser",
 ];
 
 router.post(
@@ -68,9 +67,6 @@ router.post(
     check("userType")
       .isIn(userType)
       .withMessage("userType value must be one of: " + userType.join(", ")),
-    check("isFreeZoon")
-      .isBoolean()
-      .withMessage("isFreeZoon must be a boolean value"),
   ],
   signUp
 );
@@ -106,6 +102,11 @@ router.get("/favorites/:userId", getAllFavorites);
 router.get("/getUser/:userId", getUserById);
 router.get("/getUserByType", getUserByType);
 router.get("/getSelectedProducts/:userId", getSelectedProducts);
+router.get("/interested-categories", auth, getUserInterestCategories);
+router.get("/recommended-products", auth, getRecommendedProductsForUser);
+router.get("/get-addresses", auth, getUserAddresses);
+router.post("/add-address", auth, addNewUserAddress);
+// router.get("/refunded-products", auth, getUserRefundedProducts);
 router.post(
   "/addToSelectedProducts/:userId",
   auth,

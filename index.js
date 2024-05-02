@@ -32,6 +32,10 @@ import realestateRoutes from "./routes/realestateRoutes.js";
 import deliveryServiceRoutes from "./routes/delivery_servicesRoutes.js";
 import orderRoutes from "./routes/order_routes.js";
 import aramexRouter from "./routes/aramexRoutes.js";
+import cartRouter from "./routes/cartRoutes.js";
+import sliderRouter from "./routes/images_sliders_routes.js";
+import refundedProductsRouter from "./routes/refunded_products_routes.js";
+
 import path from "path";
 import { fileURLToPath } from "url";
 import helmet from "helmet";
@@ -155,6 +159,9 @@ app.use("/delivery", deliveryServiceRoutes);
 // cron.schedule("0 0 * * *", deleteFinishedAds);
 app.use("/order", orderRoutes);
 app.use("/aramex", aramexRouter);
+app.use("/cart", cartRouter);
+app.use("/sliders", sliderRouter);
+app.use("/refunded-products", refundedProductsRouter);
 
 mongoose
   .connect(CONNECTION_URL, { useNewUrlParser: true, useUnifiedTopology: true })

@@ -1,8 +1,13 @@
 import userModel from "../models/userModel.js";
-import { Card } from '../models/card/card.model.js';
-import { addCard, createCustomer, generatePaymentIntent } from "./stripe_service.js";
+import { Card } from "../models/card/card.model.js";
+import {
+  addCard,
+  createCustomer,
+  generatePaymentIntent,
+} from "./stripe_service.js";
 import { Order } from "../models/order/order_model.js";
-import { getCart } from "./cart_service.js";
+import { emptyUserCart, getCart } from "./cart_service.js";
+import { Product } from "../models/product/product.js";
 
 // export const createOrder = async (params, callback) => {
 //     console.log("1");
@@ -128,149 +133,207 @@ import { getCart } from "./cart_service.js";
 //     })
 // };
 
+export const createOrder = async params => {
+  try {
+    console.log("create order");
+    const userDB = await userModel.findOne({ _id: params.userId }).exec();
+    console.log("this is userDB");
+    console.log(userDB);
 
-export const createOrder = async (params) => {
-    try {
-        console.log('create order');
-        const userDB = await userModel.findOne({ _id: params.userId }).exec();
-        console.log('this is userDB');
-        console.log(userDB);
-
-        if (!userDB) {
-            throw new Error('User not found');
-        }
-
-        let model = {};
-
-        if (!userDB.stripeCustomerId) {
-            const customer = await createCustomer({
-                name: userDB.username,
-                email: userDB.email,
-            });
-
-            userDB.stripeCustomerId = customer.id;
-            await userDB.save();
-
-            model.stripeCustomerId = customer.id;
-        } else {
-            model.stripeCustomerId = userDB.stripeCustomerId;
-        }
-
-        const cardDB = await Card.findOne({
-            customerId: model.stripeCustomerId,
-            cardNumber: params.card_Number,
-            cardExpMonth: params.card_ExpMonth,
-            cardExpYear: params.card_ExpYear,
-        }).exec();
-        console.log('cardDB');
-        console.log(cardDB);
-        if (!cardDB) {
-            const cardResult = await addCard({
-                card_Name: params.card_Name,
-                card_Number: params.card_Number,
-                card_ExpMonth: params.card_ExpMonth,
-                card_ExpYear: params.card_ExpYear,
-                card_CVC: params.card_CVC,
-                customer_id: model.stripeCustomerId,
-            });
-
-            const cardModel = new Card({
-                cardId: cardResult.card,
-                cardName: params.card_Name,
-                cardNumber: params.card_Number,
-                cardExpMonth: params.card_ExpMonth,
-                cardExpYear: params.card_ExpYear,
-                cardCVC: params.card_CVC,
-                customerId: model.stripeCustomerId,
-            });
-
-            await cardModel.save();
-            model.cardId = cardResult.card;
-        } else {
-            model.cardId = cardDB.cardId;
-        }
-        console.log('generatePaymentIntent');
-        const paymentIntentResult = await generatePaymentIntent({
-            receipt_email: userDB.email,
-            amount: params.amount,
-            card_id: model.cardId,
-            customer_id: model.stripeCustomerId,
-        });
-        console.log('generatePaymentIntent done');
-        model.paymentIntentId = paymentIntentResult.id;
-        model.client_secret = paymentIntentResult.client_secret;
-
-        const cartDB = await getCart({ userId: userDB.id });
-
-        if (!cartDB) {
-            throw new Error('Cart not found');
-        }
-
-        console.log(cartDB);
-
-        let products = [];
-        let grandTotal = 0;
-
-        cartDB.products.forEach((product) => {
-            products.push({
-                product: product.product._id,
-                qty: product.qty,
-                amount: 35,
-            });
-            grandTotal += product.product.priceAfterDiscount;
-        });
-
-        const orderModel = new Order({
-            userId: cartDB.userId,
-            products: products,
-            orderStatus: 'pending',
-            grandTotal: 35,
-        });
-
-        const response = await orderModel.save();
-        model.orderId = response._id;
-
-        return model;
-    } catch (error) {
-        throw error;
+    if (!userDB) {
+      throw new Error("User not found");
     }
+
+    let model = {};
+
+    if (!userDB.stripeCustomerId) {
+      //   const customer = await createCustomer({
+      //     name: userDB.username,
+      //     email: userDB.email,
+      //   });
+
+      //   userDB.stripeCustomerId = customer.id;
+      //   await userDB.save();
+
+      //   model.stripeCustomerId = customer.id;
+      let customer = await stripe.customers.list({ email: userDB.email });
+      if (customer.data.length > 0) {
+        customer = customer.data[0];
+      } else {
+        customer = await stripe.customers.create({
+          name: userDB.username,
+          email: userDB.email,
+        });
+      }
+      userDB.stripeCustomerId = customer.id;
+      await userDB.save();
+
+      model.stripeCustomerId = customer.id;
+    } else {
+      model.stripeCustomerId = userDB.stripeCustomerId;
+    }
+
+    // const cardDB = await Card.findOne({
+    //     customerId: model.stripeCustomerId,
+    //     cardNumber: params.card_Number,
+    //     cardExpMonth: params.card_ExpMonth,
+    //     cardExpYear: params.card_ExpYear,
+    // }).exec();
+    // console.log('cardDB');
+    // console.log(cardDB);
+    // if (!cardDB) {
+    //     const cardResult = await addCard({
+    //         card_Name: params.card_Name,
+    //         card_Number: params.card_Number,
+    //         card_ExpMonth: params.card_ExpMonth,
+    //         card_ExpYear: params.card_ExpYear,
+    //         card_CVC: params.card_CVC,
+    //         customer_id: model.stripeCustomerId,
+    //     });
+
+    //     const cardModel = new Card({
+    //         cardId: cardResult.card,
+    //         cardName: params.card_Name,
+    //         cardNumber: params.card_Number,
+    //         cardExpMonth: params.card_ExpMonth,
+    //         cardExpYear: params.card_ExpYear,
+    //         cardCVC: params.card_CVC,
+    //         customerId: model.stripeCustomerId,
+    //     });
+
+    //     await cardModel.save();
+    //     model.cardId = cardResult.card;
+    // } else {
+    //     model.cardId = cardDB.cardId;
+    // }
+    // const ephemeralKey = await stripe.ephemeralKeys.create(
+    //   { customer: model.stripeCustomerId },
+    //   { apiVersion: "2023-10-16" }
+    // );
+    // model.ephemeralKey = ephemeralKey;
+    console.log("generatePaymentIntent");
+    const paymentIntentResult = await generatePaymentIntent({
+      amount: params.amount,
+      customer_id: model.stripeCustomerId,
+    });
+    console.log("generatePaymentIntent done");
+    model.paymentIntentId = paymentIntentResult.id;
+    model.client_secret = paymentIntentResult.client_secret;
+    const cartDB = await getCart({ userId: userDB.id });
+
+    if (!cartDB) {
+      throw new Error("Cart not found");
+    }
+
+    console.log(cartDB);
+
+    let products = [];
+
+    for (const productItem of cartDB.products) {
+      const product = await Product.findById(productItem.product);
+
+      if (!product) {
+        throw new Error("Product not found");
+      }
+
+      const quantityOrdered = productItem.qty;
+      const updatedQuantity = product.quantity - quantityOrdered;
+
+      if (updatedQuantity < 0) {
+        throw new Error("Insufficient product quantity in inventory.");
+      }
+
+      await Product.findByIdAndUpdate(product._id, {
+        quantity: updatedQuantity,
+      });
+
+      products.push({
+        product: productItem.product,
+        qty: productItem.qty,
+        amount: product.priceAfterDiscount ?? product.price,
+      });
+    }
+    const orderModel = new Order({
+      userId: cartDB.userId,
+      clientId: params.clientId,
+      products: products,
+      orderStatus: "pending",
+      grandTotal: params.grandTotal,
+      orderEvent: params.orderEvent,
+      shippingAddress: params.shippingAddress,
+      mobile: params.mobile,
+      subTotal: params.subTotal,
+      serviceFee: params.serviceFee,
+    });
+
+    const response = await orderModel.save();
+    model.orderId = response._id;
+    const client = await userModel.findById(params.clientId);
+    if (!client) {
+      return res.status(404).json({ message: "client not found" });
+    }
+    let updatedBalance;
+    let calculateBalance;
+    const netzoonBalance = client.netzoonBalance;
+    if (
+      client.userType.name == "trader" ||
+      client.userType.name == "factory" ||
+      client.userType.name == "local_company"
+    ) {
+      calculateBalance = params.subTotal - (params.subTotal * 3) / 100;
+      updatedBalance = netzoonBalance + calculateBalance;
+    } else {
+      updatedBalance = netzoonBalance + params.subTotal;
+    }
+
+    await userModel.findByIdAndUpdate(params.clientId, {
+      netzoonBalance: updatedBalance,
+    });
+
+    return model;
+  } catch (error) {
+    throw error;
+  }
 };
 
-
 export const updateOrder = async (params, callBack) => {
-    var model = {
-        orderStatus: params.status,
-        transactionId: params.transaction_id
-    };
-    Order.findByIdAndUpdate(params.orderId, model, { useFindAndModify: false }).then((response) => {
-        if (!response) {
-            callBack('Order Update Failed');
-        } else {
-            if (params.status == 'success') {
-                // Clear the cart
-            }
-            return callBack(null, response);
+  var model = {
+    orderStatus: params.orderStatus,
+  };
+  Order.findByIdAndUpdate(params.orderId, model, { new: true })
+    .then(response => {
+      if (!response) {
+        callBack("Order Update Failed");
+      } else {
+        if (params.orderStatus == "success") {
+          const res = emptyUserCart(params.userId);
         }
-    }).catch((error) => {
-        return callBack(error);
+        return callBack(null, response);
+      }
+    })
+    .catch(error => {
+      return callBack(error);
     });
 };
 
 export const getOrders = async (params, callBack) => {
-    Order.findOne({ userId: params.userId }).populate({
-        path: 'products',
-        populate: {
-            path: 'products',
-            model: 'Products',
-            popualte: {
-                path: "category",
-                model: "DepartmentsCategory",
-                select: 'name'
-            },
+  Order.findOne({ userId: params.userId })
+    .populate({
+      path: "products",
+      populate: {
+        path: "products",
+        model: "Products",
+        popualte: {
+          path: "category",
+          model: "DepartmentsCategory",
+          select: "name",
         },
-    }).then((response) => {
-        return callBack(response);
-    }).catch((err) => {
-        return callBack(err);
+      },
+    })
+    .then(response => {
+      return callBack(response);
+    })
+    .catch(err => {
+      return callBack(err);
     });
-}
+};

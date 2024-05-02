@@ -17,6 +17,7 @@ import userModel from "../models/userModel.js";
 import { Governmental } from "../models/categories/governmental/gonermental_model.js";
 import { customscategories } from "../models/categories/customs/custom_categories.js";
 import { VehicleCompany } from "../models/categories/vehicle/vehicle_company_model.js";
+import { LocalCompanyCategories } from "../models/categories/local_company/company_categories.js";
 
 //Categories controllers
 export const getAllCategories = async (req, res) => {
@@ -169,14 +170,50 @@ export const getCustomsById = async (req, res) => {
 };
 
 //localcompany controllers
-export const getAllLocalCompanies = async (req, res) => {
+export const getAllLocalCompanyCategories = async (req, res) => {
   try {
-    const data = await LocalCompany.find({}).select("-products");
+    const data = await LocalCompanyCategories.find();
     res.json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getAllLocalCompanies = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { country } = req.query;
+    let data;
+    if (country) {
+      data = await LocalCompanyCategories.findById(id, {
+        companies: 1,
+        _id: 0,
+      }).populate({
+        path: "companies",
+        match: { country },
+      });
+    } else {
+      data = await LocalCompanyCategories.findById(id, {
+        companies: 1,
+        _id: 0,
+      }).populate({
+        path: "companies",
+      });
+    }
+
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+// export const getAllLocalCompanies = async (req, res) => {
+//   try {
+//     const data = await LocalCompany.find({}).select("-products");
+//     res.json(data);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
 
 export const getLocalCompanyById = async (req, res) => {
   try {
@@ -735,15 +772,15 @@ export const resetVehicleCount = async (req, res) => {
     newSubscriptionExpireDate.setDate(newSubscriptionExpireDate.getDate() + 30);
     user.subscriptionExpireDate = newSubscriptionExpireDate;
 
-    if (user.userType == "car") {
+    if (user.userType.name == "car") {
       const remainingcarsFromLastMonth = user.carsListingsRemaining || 0;
       user.carsListingsRemaining = remainingcarsFromLastMonth + 50;
     }
-    if (user.userType == "planes") {
+    if (user.userType.name == "planes") {
       const remainingplanesFromLastMonth = user.planesListingsRemaining || 0;
       user.planesListingsRemaining = remainingplanesFromLastMonth + 50;
     }
-    if (user.userType == "real_estate") {
+    if (user.userType.name == "real_estate") {
       const remainingFromLastMonth = user.realEstateListingsRemaining || 0;
       user.realEstateListingsRemaining = remainingFromLastMonth + 50;
     }

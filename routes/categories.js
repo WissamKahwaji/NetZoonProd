@@ -31,6 +31,7 @@ import {
   editVehicle,
   deleteVehicle,
   resetVehicleCount,
+  getAllLocalCompanyCategories,
 } from "../controllers/categories.js";
 import auth from "../middlewares/auth.js";
 import {
@@ -73,7 +74,9 @@ router.get("/get-customs", getCustoms);
 router.get("/customs/:id", getCustomsById);
 
 //local company routes
-router.get("/local-company", getAllLocalCompanies);
+router.get("/local-company", getAllLocalCompanyCategories);
+router.get("/local-company/:id", getAllLocalCompanies);
+
 router.get("/local-company/:id", getLocalCompanyById);
 router.get("/local-company/get-products/:id", getLocalCompanyProducts);
 router.get("/local-company/get-services/:id", getCompanyServices);

@@ -16,21 +16,36 @@ const userSchema = mongoose.Schema(
       type: String,
     },
     userType: {
-      type: String,
-      enum: [
-        "local_company",
-        "user",
-        "freezone",
-        "factory",
-        "car",
-        "planes",
-        "sea_companies",
-        "news_agency",
-        "real_estate",
-        "trader",
-        "delivery_company",
-      ],
+      name: {
+        type: String,
+        enum: [
+          "user",
+          "freezone",
+          "factory",
+          "local_company",
+          "merchant",
+          "advertiser",
+        ],
+      },
+      subType: String,
     },
+    // userType: {
+    //   type: String,
+    //   enum: [
+    //     "local_company",
+    //     "user",
+    //     "freezone",
+    //     "factory",
+    //     "car",
+    //     "planes",
+    //     "sea_companies",
+    //     "news_agency",
+    //     "real_estate",
+    //     "trader",
+    //     "delivery_company",
+    //   ],
+    //   default: "user",
+    // },
     firstMobile: {
       type: String,
     },
@@ -61,6 +76,18 @@ const userSchema = mongoose.Schema(
     subcategory: String,
     country: String,
     address: String,
+    addresses: [
+      {
+        isSelectable: Boolean,
+        addressType: {
+          type: String,
+          enum: ["home", "work"],
+        },
+        name: String,
+        address: String,
+        mobileNumber: String,
+      },
+    ],
     netzoonBalance: {
       type: Number,
       default: 0,
@@ -128,6 +155,13 @@ const userSchema = mongoose.Schema(
         },
       ],
     },
+    refundedProducts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "RefundedProducts",
+        required: true,
+      },
+    ],
     favorites: {
       products: [
         {
@@ -158,6 +192,13 @@ const userSchema = mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         default: [],
+      },
+    ],
+
+    interestCategories: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "DepartmentsCategory",
       },
     ],
 

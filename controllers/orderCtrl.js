@@ -2,6 +2,7 @@ import { ClientOrders } from "../models/order/client_order_model.js";
 import { Order } from "../models/order/order_model.js";
 import { Product } from "../models/product/product.js";
 import userModel from "../models/userModel.js";
+
 import {
   createOrder,
   updateOrder,
@@ -12,12 +13,20 @@ export const createTheOrder = async (req, res, next) => {
   try {
     const model = {
       userId: req.params.userId,
+      clientId: req.body.clientId,
       card_Name: req.body.card_Name,
       card_Number: req.body.card_Number,
       card_ExpMonth: req.body.card_ExpMonth,
       card_ExpYear: req.body.card_ExpYear,
       card_CVC: req.body.card_CVC,
       amount: req.body.amount,
+      grandTotal: req.body.grandTotal,
+      orderStatus: req.body.orderStatus,
+      orderEvent: req.body.orderEvent,
+      shippingAddress: req.body.shippingAddress,
+      mobile: req.body.mobile,
+      subTotal: req.body.subTotal,
+      serviceFee: req.body.serviceFee,
     };
 
     const results = await createOrder(model);
@@ -32,7 +41,12 @@ export const createTheOrder = async (req, res, next) => {
 };
 
 export const updateTheOrder = (req, res, next) => {
-  updateOrder(req.body, (error, results) => {
+  const params = {
+    orderId: req.body.orderId,
+    userId: req.params.userId,
+    orderStatus: req.body.orderStatus,
+  };
+  updateOrder(params, (error, results) => {
     if (error) {
       return next(error);
     }
@@ -137,9 +151,9 @@ export const saveOrder = async (req, res) => {
     let calculateBalance;
     const netzoonBalance = client.netzoonBalance;
     if (
-      client.userType == "trader" ||
-      client.userType == "factory" ||
-      client.userType == "local_company"
+      client.userType.name == "trader" ||
+      client.userType.name == "factory" ||
+      client.userType.name == "local_company"
     ) {
       calculateBalance = subTotal - (subTotal * 3) / 100;
       updatedBalance = netzoonBalance + calculateBalance;

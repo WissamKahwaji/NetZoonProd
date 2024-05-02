@@ -20,6 +20,7 @@ import { Comment } from "../models/news/comment_model.js";
 import { DealsItems } from "../models/deals/dealsItemsModel.js";
 import { DealsCategories } from "../models/deals/dealsCategoriesModel.js";
 import nodemailer from "nodemailer";
+import { shuffleArray } from "../utils/helpers.js";
 // import passport from "passport";
 // var GoogleStrategy = require("passport-google-oauth2").Strategy;
 
@@ -53,7 +54,7 @@ const key = "otp-secret-key";
 // });
 
 // QB.init('101248', '7QsUQCOppNXAmTq', 's4XksyBADdYYkPa', '6Ks95ZqZu8PNbwv4Yvz9');
-
+const PAGINATION_LIMIT = 10;
 export const refreshAccessToken = async (req, res) => {
   const { token } = req.body;
 
@@ -208,7 +209,7 @@ export const oAuthSignIn = async (req, res) => {
       const newUser = await userModel.create({
         username,
         email,
-        userType,
+        userType: { name: userType },
         firstMobile,
         secondeMobile,
         thirdMobile,
@@ -255,14 +256,19 @@ export const oAuthSignIn = async (req, res) => {
       newUser.isThereWarehouse = isThereWarehouse ?? false;
       newUser.isThereFoodsDelivery = isThereFoodsDelivery ?? false;
       newUser.refreshToken = refreshToken;
-      if (userType == "car" || "planes" || "sea_companies" || "real_estate") {
+      if (
+        userType.name == "car" ||
+        "planes" ||
+        "sea_companies" ||
+        "real_estate"
+      ) {
         const subscriptionExpireDate = new Date();
         subscriptionExpireDate.setDate(subscriptionExpireDate.getDate() + 30);
         newUser.subscriptionExpireDate = subscriptionExpireDate;
         // await newUser.save();
       }
 
-      if (userType === "factory") {
+      if (userType.name === "factory") {
         const factoryCategory = await FactoryCategories.findOneAndUpdate(
           { title: title }, // Update this condition based on your requirements
           { $push: { factory: newUser._id } },
@@ -469,7 +475,7 @@ export const signUp = async (req, res) => {
       username,
       email,
       password: hashedPassword,
-      userType,
+      userType: { name: userType },
       firstMobile,
       secondeMobile,
       thirdMobile,
@@ -519,14 +525,19 @@ export const signUp = async (req, res) => {
     // if (deliverable != null) {
     //   newUser.deliverable = deliverable ?? false;
     // }
-    if (isThereWarehouse) {
-      newUser.isThereWarehouse = isThereWarehouse ?? false;
-    }
-    if (isThereFoodsDelivery) {
-      newUser.isThereFoodsDelivery = isThereFoodsDelivery ?? false;
-    }
+    // if (isThereWarehouse && isThereWarehouse != null) {
+    //   newUser.isThereWarehouse = isThereWarehouse ?? false;
+    // }
+    // if (isThereFoodsDelivery && isThereWarehouse != null) {
+    //   newUser.isThereFoodsDelivery = isThereFoodsDelivery ?? false;
+    // }
 
-    if (userType == "car" || "planes" || "sea_companies" || "real_estate") {
+    if (
+      userType.name == "car" ||
+      "planes" ||
+      "sea_companies" ||
+      "real_estate"
+    ) {
       const subscriptionExpireDate = new Date();
       subscriptionExpireDate.setDate(subscriptionExpireDate.getDate() + 30);
       newUser.subscriptionExpireDate = subscriptionExpireDate;
@@ -547,7 +558,7 @@ export const signUp = async (req, res) => {
       { expiresIn: "1y" }
     );
     newUser.refreshToken = refreshToken;
-    if (userType === "factory") {
+    if (userType.name === "factory") {
       const factoryCategory = await FactoryCategories.findOneAndUpdate(
         { title: title }, // Update this condition based on your requirements
         { $push: { factory: newUser._id } },
@@ -677,21 +688,27 @@ export const signUp = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const { name } = req.query;
-
+    const { name, page } = req.query;
+    const pageNumber = parseInt(page, 10) || 1;
     let users;
 
     if (name) {
       // If 'name' parameter is present, perform search
-      users = await userModel.find({
-        username: { $regex: new RegExp(name, "i") },
-      });
+      users = await userModel
+        .find({
+          username: { $regex: new RegExp(name, "i") },
+        })
+        .skip((pageNumber - 1) * PAGINATION_LIMIT)
+        .limit(PAGINATION_LIMIT);
     } else {
       // If 'name' parameter is not present, get all users
-      users = await userModel.find();
+      users = await userModel
+        .find()
+        .skip((pageNumber - 1) * PAGINATION_LIMIT)
+        .limit(PAGINATION_LIMIT);
     }
 
-    return res.status(200).json(users);
+    return res.status(200).json({ users });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
@@ -960,7 +977,9 @@ export const clearFav = async (req, res) => {
 
 export const getAllFavorites = async (req, res) => {
   const { userId } = req.params;
+  const { page } = req.query;
 
+  const pageNumber = parseInt(page, 10) || 1;
   try {
     // Find the user by userId and populate the favorite products
     const user = await userModel
@@ -969,6 +988,10 @@ export const getAllFavorites = async (req, res) => {
         path: "favorites.products.productId",
         select: "name imageUrl category description price",
         populate: { path: "category", select: "name" },
+        options: {
+          skip: (pageNumber - 1) * PAGINATION_LIMIT,
+          limit: PAGINATION_LIMIT,
+        },
       })
       .exec();
 
@@ -1016,20 +1039,26 @@ export const getUserById = async (req, res) => {
 export const getUserByType = async (req, res) => {
   const { userType } = req.query;
   try {
-    const { country } = req.query;
-    let user;
+    const { country, page } = req.query;
+    const pageNumber = parseInt(page, 10) || 1;
+
+    let query = { "userType.name": userType };
+
     if (country) {
-      user = await userModel
-        .find({ userType: userType, country: country })
-        .select("-password");
-    } else {
-      user = await userModel.find({ userType: userType }).select("-password");
+      query.country = country;
     }
-    // const user = await userModel.find({ userType: userType });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+
+    const users = await userModel
+      .find(query)
+      .select("-password")
+      .skip((pageNumber - 1) * PAGINATION_LIMIT)
+      .limit(PAGINATION_LIMIT);
+
+    if (!users || users.length === 0) {
+      return res.status(404).json({ message: "Users not found" });
     }
-    return res.status(200).json(user);
+
+    return res.status(200).json(users);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
@@ -1037,138 +1066,48 @@ export const getUserByType = async (req, res) => {
 };
 
 export const EditUser = async (req, res) => {
-  const { userId } = req.params;
-  const {
-    username,
-    userType,
-    email,
-    firstMobile,
-    secondeMobile,
-    thirdMobile,
-    subcategory,
-    address,
-    companyProductsNumber,
-    sellType,
-    toCountry,
-    bio,
-    description,
-    website,
-    slogn,
-    link,
-    profitRatio,
-    city,
-    addressDetails,
-    contactName,
-    floorNum,
-    locationType,
-  } = req.body;
-  console.log(req.body);
-  let profileUrlImage;
-  let coverUrlImage;
-  let frontIdPhotoUrlImage;
-  let backIdPhotoUrlImage;
-  let tradeLicensePhotoUrlImage;
-  let deliveryPermitPhotoUrlImage;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
 
-  console.log(req.params);
+  const { userId } = req.params;
+  const updateFields = { ...req.body };
+  const imageFields = [
+    "profilePhoto",
+    "coverPhoto",
+    "frontIdPhoto",
+    "backIdPhoto",
+    "tradeLicensePhoto",
+    "deliveryPermitPhoto",
+  ];
+
   try {
-    const user = await userModel.findById(userId);
+    if (req.userId != userId) {
+      return res.status(403).json("Error in Authorization");
+    }
+
+    const user = await userModel.findOneAndUpdate(
+      { _id: userId },
+      { $set: updateFields },
+      { new: true }
+    );
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    if (req.userId != userId) {
-      return res.status(403).json("Error in Authurization");
-    }
-
-    // Check if a profile photo is included in the request
-    if (req.files && req.files["profilePhoto"]) {
-      const profilePhoto = req.files["profilePhoto"][0];
-      profileUrlImage =
-        "https://www.netzoonback.siidevelopment.com/" +
-        profilePhoto.path.replace(/\\/g, "/");
-    }
-    if (req.files && req.files["coverPhoto"]) {
-      const coverPhoto = req.files["coverPhoto"][0];
-      coverUrlImage =
-        "https://www.netzoonback.siidevelopment.com/" +
-        coverPhoto.path.replace(/\\/g, "/");
-    }
-
-    if (req.files && req.files["frontIdPhoto"]) {
-      const frontIdPhoto = req.files["frontIdPhoto"][0];
-      frontIdPhotoUrlImage =
-        "https://www.netzoonback.siidevelopment.com/" +
-        frontIdPhoto.path.replace(/\\/g, "/");
-    }
-    if (req.files && req.files["backIdPhoto"]) {
-      const backIdPhoto = req.files["backIdPhoto"][0];
-      backIdPhotoUrlImage =
-        "https://www.netzoonback.siidevelopment.com/" +
-        backIdPhoto.path.replace(/\\/g, "/");
-    }
-    if (req.files && req.files["tradeLicensePhoto"]) {
-      const tradeLicensePhoto = req.files["tradeLicensePhoto"][0];
-      tradeLicensePhotoUrlImage =
-        "https://www.netzoonback.siidevelopment.com/" +
-        tradeLicensePhoto.path.replace(/\\/g, "/");
-    }
-    if (req.files && req.files["deliveryPermitPhoto"]) {
-      const deliveryPermitPhoto = req.files["deliveryPermitPhoto"][0];
-      deliveryPermitPhotoUrlImage =
-        "https://www.netzoonback.siidevelopment.com/" +
-        deliveryPermitPhoto.path.replace(/\\/g, "/");
-    }
-
-    if (username) user.username = username;
-    if (email) user.email = email;
-    user.firstMobile = firstMobile;
-    user.secondeMobile = secondeMobile;
-    user.thirdMobile = thirdMobile;
-    user.subcategory = subcategory;
-    user.address = address;
-    user.companyProductsNumber = companyProductsNumber;
-    user.sellType = sellType;
-    user.toCountry = toCountry;
-    user.bio = bio;
-    user.description = description;
-    user.website = website;
-    user.link = link;
-    user.slogn = slogn;
-    user.profitRatio = profitRatio;
-    user.city = city;
-    user.addressDetails = addressDetails;
-    user.contactName = contactName;
-    if (profileUrlImage) {
-      user.profilePhoto = profileUrlImage;
-    }
-    if (coverUrlImage) {
-      user.coverPhoto = coverUrlImage;
-    }
-    if (frontIdPhotoUrlImage) {
-      user.frontIdPhoto = frontIdPhotoUrlImage;
-    }
-    if (backIdPhotoUrlImage) {
-      user.backIdPhoto = backIdPhotoUrlImage;
-    }
-    if (tradeLicensePhotoUrlImage) {
-      user.tradeLicensePhoto = tradeLicensePhotoUrlImage;
-    }
-    if (deliveryPermitPhotoUrlImage) {
-      user.deliveryPermitPhoto = deliveryPermitPhotoUrlImage;
-    }
-    if (userType) {
-      user.userType = userType;
-    }
-    if (floorNum) {
-      user.floorNum = floorNum;
-    }
-    if (locationType) {
-      user.locationType = locationType;
-    }
+    // Process image fields
+    imageFields.forEach(field => {
+      if (req.files && req.files[field]) {
+        const image = req.files[field][0];
+        user[field] =
+          "https://www.netzoonback.siidevelopment.com/" +
+          image.path.replace(/\\/g, "/");
+      }
+    });
 
     const updatedUser = await user.save();
-
     res.status(200).json({
       message: "Updated user successfully",
       result: updatedUser,
@@ -1179,9 +1118,74 @@ export const EditUser = async (req, res) => {
   }
 };
 
+export const getUserInterestCategories = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const user = await userModel.findById(userId).select("interestCategories");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const interestCategoryIds = user.interestCategories;
+
+    const interestCategories = await DepartmentsCategory.find({
+      _id: { $in: interestCategoryIds },
+    }).populate("department");
+
+    return res.status(200).json(interestCategories);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const getRecommendedProductsForUser = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { page } = req.query;
+
+    const pageNumber = parseInt(page, 10) || 1;
+
+    const user = await userModel.findById(userId).select("interestCategories");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const interestCategoryIds = user.interestCategories;
+
+    const products = await Product.find({
+      category: { $in: interestCategoryIds },
+    })
+      .skip((pageNumber - 1) * PAGINATION_LIMIT)
+      .limit(PAGINATION_LIMIT)
+      .populate("category", "name")
+
+      .populate("owner", "-password")
+      .populate({
+        path: "ratings",
+        populate: {
+          path: "user",
+          select: ["username", "userType"],
+        },
+      });
+
+    const shuffledProducts = shuffleArray(products);
+
+    return res.json(shuffledProducts);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 export const getSelectedProducts = async (req, res) => {
   try {
     const { userId } = req.params;
+    const { page } = req.query;
+
+    const pageNumber = parseInt(page, 10) || 1;
     const user = await userModel
       .findById(userId)
       .populate("selectedProducts")
@@ -1197,6 +1201,10 @@ export const getSelectedProducts = async (req, res) => {
             select: "username userType",
           },
         ],
+        options: {
+          skip: (pageNumber - 1) * PAGINATION_LIMIT,
+          limit: PAGINATION_LIMIT,
+        },
       });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -1312,7 +1320,15 @@ export const toggleFollow = async (req, res) => {
 export const getUserFollowings = async (req, res) => {
   try {
     const userId = req.params.userId;
-    const user = await userModel.findById(userId).populate("followings");
+    const { page } = req.query;
+    const pageNumber = parseInt(page, 10) || 1;
+    const user = await userModel.findById(userId).populate({
+      path: "followings",
+      options: {
+        skip: (pageNumber - 1) * PAGINATION_LIMIT,
+        limit: PAGINATION_LIMIT,
+      },
+    });
 
     // Use a Set to store unique followings
     const uniqueFollowingsSet = new Set();
@@ -1334,7 +1350,15 @@ export const getUserFollowings = async (req, res) => {
 export const getUserFollowers = async (req, res) => {
   try {
     const userId = req.params.userId;
-    const user = await userModel.findById(userId).populate("followers");
+    const { page } = req.query;
+    const pageNumber = parseInt(page, 10) || 1;
+    const user = await userModel.findById(userId).populate({
+      path: "followers",
+      options: {
+        skip: (pageNumber - 1) * PAGINATION_LIMIT,
+        limit: PAGINATION_LIMIT,
+      },
+    });
 
     // Use a Set to store unique followers
     const uniqueFollowersSet = new Set();
@@ -1466,7 +1490,40 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+export const getUserAddresses = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const user = await userModel.findById(userId);
+    const addresses = user.addresses;
 
+    res.status(200).json(addresses);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const addNewUserAddress = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { name, mobileNumber, address, addressType } = req.body;
+    const user = await userModel.findById(userId);
+    const newAddress = {
+      isSelectable: true,
+      addressType,
+      name,
+      address,
+      mobileNumber,
+    };
+    user.addresses.forEach(addr => {
+      addr.isSelectable = false;
+    });
+    user.addresses.push(newAddress);
+    await user.save();
+    res.status(200).json("Success");
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 // export const deleteAccount = async (req, res) => {
 //     const {userId} = req.params;
 
@@ -1492,14 +1549,14 @@ export const deleteAccount = async (req, res) => {
 
   try {
     const userToDelete = await userModel.findById(userId);
+    if (req.userId != userId) {
+      return res.status(403).json("Error in Authurization");
+    }
 
     if (!userToDelete) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    if (req.userId != userId) {
-      return res.status(403).json("Error in Authurization");
-    }
     const userProducts = await Product.find({ owner: userId });
 
     for (const product of userProducts) {

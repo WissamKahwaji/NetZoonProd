@@ -4,20 +4,46 @@ import { Product } from "../../models/product/product.js";
 import { deleteFile } from "../../utils/file.js";
 import mongoose from "mongoose";
 import userModel from "../../models/userModel.js";
+import { Order } from "../../models/order/order_model.js";
 // import upload from "../../middlewares/upload.js";
 // import multer from "multer";
 
+const PAGINATION_LIMIT = 10;
+
+export const getAllDepartments = async (req, res) => {
+  try {
+    const departments = await Departments.find().select("-departmentsCategory");
+    return res.status(200).json(departments);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const getAllDepartmentsCategories = async (req, res) => {
+  try {
+    const categories = await DepartmentsCategory.find();
+    return res.status(200).json(categories);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 export const getAllProducts = async (req, res) => {
   try {
-    const { country } = req.query;
+    const { country, page } = req.query;
+    const pageNumber = parseInt(page, 10) || 1;
     let products;
 
     if (country) {
       products = await Product.find({ country })
+        .skip((pageNumber - 1) * PAGINATION_LIMIT)
+        .limit(PAGINATION_LIMIT)
         .populate("category", "name")
         .populate("owner");
     } else {
       products = await Product.find()
+        .skip((page - 1) * PAGINATION_LIMIT)
+        .limit(PAGINATION_LIMIT)
         .populate("category", "name")
         .populate("owner");
     }
@@ -27,13 +53,294 @@ export const getAllProducts = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+export const getBestDealsProducts = async (req, res) => {
+  try {
+    const { country, page } = req.query;
+
+    const pageNumber = parseInt(page, 10) || 1;
+
+    let query = { discountPercentage: { $gt: 0 } };
+
+    if (country) {
+      query.country = country;
+    }
+
+    const totalCount = await Product.countDocuments(query);
+
+    const products = await Product.find(query)
+      .sort({ discountPercentage: -1 })
+      .skip((pageNumber - 1) * PAGINATION_LIMIT)
+      .limit(PAGINATION_LIMIT)
+      .populate("category", "name")
+      .populate("owner")
+      .populate({
+        path: "ratings",
+        populate: {
+          path: "user",
+          select: ["username", "userType"],
+        },
+      });
+    const totalPages = Math.ceil(totalCount / PAGINATION_LIMIT);
+
+    return res.json(products);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const getCategoriesWithOffers = async (req, res) => {
+  try {
+    const allCategories = await DepartmentsCategory.find()
+      .populate("products")
+      .populate("department", "-departmentsCategory");
+    const categoriesWithMaxDiscount = allCategories
+      .filter(category => {
+        if (!category.products || category.products.length === 0) {
+          return false; // Skip categories with no products
+        }
+        const maxDiscountProduct = category.products.reduce(
+          (maxProduct, currentProduct) => {
+            return currentProduct.discountPercentage >
+              maxProduct.discountPercentage
+              ? currentProduct
+              : maxProduct;
+          },
+          category.products[0]
+        );
+        return maxDiscountProduct.discountPercentage > 0; // Filter categories with max discount product
+      })
+      .map(category => ({
+        _id: category._id,
+        name: category.name,
+        imageUrl: category.imageUrl,
+        department: category.department,
+        maxDiscount: Math.max(
+          ...category.products.map(product => product.discountPercentage)
+        ),
+      }));
+
+    return res.json(categoriesWithMaxDiscount);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const getOfferedProductsInCategory = async (req, res) => {
+  try {
+    const categoryId = req.params.id;
+    const { page } = req.query;
+
+    const pageNumber = parseInt(page, 10) || 1;
+
+    const category = await DepartmentsCategory.findById(categoryId).populate(
+      "products"
+    );
+
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    const offeredProducts = category.products.filter(
+      product => product.discountPercentage > 0
+    );
+
+    const totalCount = offeredProducts.length;
+    const totalPages = Math.ceil(totalCount / PAGINATION_LIMIT);
+
+    const paginatedProducts = offeredProducts.slice(
+      (pageNumber - 1) * PAGINATION_LIMIT,
+      pageNumber * PAGINATION_LIMIT
+    );
+
+    return res.json(paginatedProducts);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const getBestSellingProducts = async (req, res) => {
+  try {
+    const { page } = req.query;
+
+    const pageNumber = parseInt(page, 10) || 1;
+
+    const bestSellingProducts = await Order.aggregate([
+      {
+        $unwind: "$products",
+      },
+      {
+        $group: {
+          _id: "$products.product", // Group by product
+          totalQuantitySold: { $sum: "$products.qty" }, // Calculate total quantity sold
+        },
+      },
+      {
+        $sort: { totalQuantitySold: -1 }, // Sort by total quantity sold in descending order
+      },
+      {
+        $skip: (pageNumber - 1) * PAGINATION_LIMIT, // Skip documents based on pagination
+      },
+      {
+        $limit: PAGINATION_LIMIT, // Limit to the specified number of products per page
+      },
+    ]);
+
+    // Populate product details for best selling products
+    const populatedBestSellingProducts = await Product.populate(
+      bestSellingProducts,
+      {
+        path: "_id",
+        populate: [
+          "owner",
+          {
+            path: "category",
+            populate: [
+              {
+                path: "department",
+                select: "-departmentsCategory",
+              },
+            ],
+          },
+          {
+            path: "ratings",
+            populate: {
+              path: "user",
+              select: ["username", "userType"],
+            },
+          },
+        ],
+      }
+    );
+    const totalCount = populatedBestSellingProducts.length;
+    const totalPages = Math.ceil(totalCount / PAGINATION_LIMIT);
+    return res.json(populatedBestSellingProducts);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+export const getBestDealsProductsRandomly = async (req, res) => {
+  try {
+    const { country } = req.query;
+    const { page } = req.query;
+
+    const pageNumber = parseInt(page, 10) || 1;
+    let products;
+
+    if (country) {
+      products = await Product.find({ country, discountPercentage: { $gt: 0 } })
+        .skip((pageNumber - 1) * PAGINATION_LIMIT)
+        .limit(PAGINATION_LIMIT)
+        .populate("category", "name")
+        .populate("owner")
+        .populate({
+          path: "ratings",
+          populate: {
+            path: "user",
+            select: ["username", "userType"],
+          },
+        });
+    } else {
+      products = await Product.find({ discountPercentage: { $gt: 0 } })
+        .skip((pageNumber - 1) * PAGINATION_LIMIT)
+        .limit(PAGINATION_LIMIT)
+        .populate("category", "name")
+        .populate("owner")
+        .populate({
+          path: "ratings",
+          populate: {
+            path: "user",
+            select: ["username", "userType"],
+          },
+        });
+    }
+
+    return res.json(products);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const getBestOffersInDepartment = async (req, res) => {
+  try {
+    const { departmentId } = req.params;
+    const { country } = req.query;
+    const { page } = req.query;
+
+    const pageNumber = parseInt(page, 10) || 1;
+    // Find department category IDs
+    const departmentCategories = await DepartmentsCategory.find({
+      department: departmentId,
+    }).select("_id");
+
+    // Construct query to find products with offers in the specified department
+    const query = {
+      category: { $in: departmentCategories },
+      discountPercentage: { $gt: 0 },
+    };
+
+    if (country) {
+      query.country = country;
+    }
+
+    // Find products matching the query and populate category and department details
+    const products = await Product.find(query)
+      .sort({ discountPercentage: -1 })
+      .skip((pageNumber - 1) * PAGINATION_LIMIT)
+      .limit(PAGINATION_LIMIT)
+      .populate({
+        path: "category",
+        populate: [
+          {
+            path: "department",
+            select: "-departmentsCategory",
+          },
+        ],
+      })
+      .populate("owner");
+
+    return res.json(products);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+export const getSelectedProductsInDepartment = async (req, res) => {
+  try {
+    const { departmentId } = req.params;
+    const { page } = req.query;
+
+    const pageNumber = parseInt(page, 10) || 1;
+    const departmentCategories = await DepartmentsCategory.find({
+      department: departmentId,
+    }).select("_id");
+
+    const products = await Product.find({
+      category: { $in: departmentCategories },
+      UsersSelected: { $exists: true, $not: { $size: 0 } },
+    })
+      .skip((pageNumber - 1) * PAGINATION_LIMIT)
+      .limit(PAGINATION_LIMIT)
+      .populate("owner")
+
+      .populate("category");
+
+    return res.json(products);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 export const getSelectableProducts = async (req, res) => {
   try {
     const { country } = req.query;
+    const { page } = req.query;
+
+    const pageNumber = parseInt(page, 10) || 1;
     let selectableProducts;
 
     if (country) {
       selectableProducts = await Product.find({ country })
+        .skip((pageNumber - 1) * PAGINATION_LIMIT)
+        .limit(PAGINATION_LIMIT)
         .populate({
           path: "owner",
           select: "username userType isSelectable",
@@ -43,6 +350,8 @@ export const getSelectableProducts = async (req, res) => {
         .exec();
     } else {
       selectableProducts = await Product.find()
+        .skip((pageNumber - 1) * PAGINATION_LIMIT)
+        .limit(PAGINATION_LIMIT)
         .populate({
           path: "owner",
           select: "username userType isSelectable",
@@ -62,12 +371,82 @@ export const getSelectableProducts = async (req, res) => {
   }
 };
 
+export const getLatestProducts = async (req, res) => {
+  try {
+    const { country, page } = req.query;
+    let queryParams = {};
+    const pageNumber = parseInt(page, 10) || 1;
+
+    if (country) {
+      queryParams.country = country;
+    }
+
+    const totalCount = await Product.countDocuments(queryParams);
+
+    const products = await Product.find(queryParams)
+      .sort({ _id: -1 })
+      .skip((pageNumber - 1) * PAGINATION_LIMIT)
+      .limit(PAGINATION_LIMIT)
+      .populate("category", "name")
+      .populate("owner")
+      .populate({
+        path: "ratings",
+        populate: {
+          path: "user",
+          select: ["username", "userType"],
+        },
+      });
+
+    const totalPages = Math.ceil(totalCount / PAGINATION_LIMIT);
+
+    return res.json(products);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const getSimilarProducts = async (req, res) => {
+  try {
+    const { country, page } = req.query;
+    const { categoriesList } = req.body;
+    let queryParams = {};
+    const pageNumber = parseInt(page, 10) || 1;
+
+    if (country) {
+      queryParams.country = country;
+    }
+    if (categoriesList && categoriesList.length > 0) {
+      queryParams.category = { $in: categoriesList };
+    }
+
+    const totalCount = await Product.countDocuments(queryParams);
+
+    const products = await Product.find(queryParams)
+      .skip((pageNumber - 1) * PAGINATION_LIMIT)
+      .limit(PAGINATION_LIMIT)
+      .populate("category", "name")
+      .populate("owner");
+
+    const totalPages = Math.ceil(totalCount / PAGINATION_LIMIT);
+
+    return res.json(products);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 export const getProductById = async (req, res) => {
   const { productId } = req.params;
   try {
     const product = await Product.findById(productId)
       .populate("category", "name")
-      .populate("owner", "-password");
+      .populate("owner", "-password")
+      .populate({
+        path: "ratings",
+        populate: {
+          path: "user",
+        },
+      });
     return res.json(product);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -77,6 +456,9 @@ export const getProductById = async (req, res) => {
 export const filterOnProducts = async (req, res) => {
   try {
     const { country, priceMin, priceMax, owner, condition } = req.query;
+    const { page } = req.query;
+
+    const pageNumber = parseInt(page, 10) || 1;
     let query = {};
     if (country) {
       query.country = country;
@@ -109,6 +491,8 @@ export const filterOnProducts = async (req, res) => {
       query.condition = condition;
     }
     let products = await Product.find(query)
+      .skip((pageNumber - 1) * PAGINATION_LIMIT)
+      .limit(PAGINATION_LIMIT)
       .populate("category", "name")
       .populate("owner", "-password");
     return res.json(products);
@@ -122,7 +506,15 @@ export const getCategoriesByDepartment = async (req, res) => {
     const { department } = req.query;
     const departmentres = await Departments.findOne({
       name: department,
-    }).populate("departmentsCategory");
+    }).populate({
+      path: "departmentsCategory",
+      populate: [
+        {
+          path: "department",
+          select: "-departmentsCategory",
+        },
+      ],
+    });
     if (!departmentres) {
       return res.status(404).json({ message: "no Data Found" });
     }
@@ -198,12 +590,13 @@ export const getCategoriesByDepartment = async (req, res) => {
 
 export const getProductsByCategory = async (req, res) => {
   try {
-    const { country, priceMin, priceMax, owner, condition } = req.query;
-
+    const { country, priceMin, priceMax, owner, condition, page } = req.query;
     const { department, category } = req.query;
 
-    await Product.find();
+    // Parse the page number
+    const pageNumber = parseInt(page, 10) || 1;
 
+    // Find the department by name
     const departments = await Departments.findOne({ name: department });
     if (!departments) {
       return res
@@ -211,21 +604,15 @@ export const getProductsByCategory = async (req, res) => {
         .json({ message: `Department ${department} not found` });
     }
 
+    // Find the category by name and department
     const categories = await DepartmentsCategory.findOne({
       name: category,
       department: departments._id,
     }).populate({
       path: "products",
       populate: [
-        {
-          path: "category",
-          select: "name",
-        },
-        {
-          path: "owner",
-          select: "-password",
-          // select: 'username',
-        },
+        { path: "category", select: "name" },
+        { path: "owner", select: "-password" },
       ],
     });
 
@@ -236,7 +623,7 @@ export const getProductsByCategory = async (req, res) => {
     }
 
     // Apply the filters based on the provided query parameters
-    const filteredProducts = categories.products.filter(product => {
+    let filteredProducts = categories.products.filter(product => {
       // Filter by country
       if (country && product.country !== country) {
         return false;
@@ -265,7 +652,15 @@ export const getProductsByCategory = async (req, res) => {
       return true;
     });
 
-    if (filteredProducts.length === 0) {
+    // Paginate the filtered products
+    const totalProducts = filteredProducts.length;
+    const totalPages = Math.ceil(totalProducts / PAGINATION_LIMIT);
+    const paginatedProducts = filteredProducts.slice(
+      (pageNumber - 1) * PAGINATION_LIMIT,
+      pageNumber * PAGINATION_LIMIT
+    );
+
+    if (paginatedProducts.length === 0) {
       return res
         .status(404)
         .json("No products found with the provided filters");
@@ -275,10 +670,13 @@ export const getProductsByCategory = async (req, res) => {
       message: "success",
       department,
       category,
-      results: filteredProducts,
+      totalProducts,
+      totalPages,
+      currentPage: pageNumber,
+      results: paginatedProducts,
     });
   } catch (error) {
-    return res.status(500).json(error.message);
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -576,7 +974,7 @@ export const getUserProducts = async (req, res) => {
 export const rateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { rating, userId } = req.body;
+    const { rating, userId, review } = req.body;
 
     const existingProduct = await Product.findById(id);
     if (!existingProduct) {
@@ -597,7 +995,7 @@ export const rateProduct = async (req, res) => {
     }
 
     // Add the new rating to the service
-    existingProduct.ratings.push({ user: userId, rating });
+    existingProduct.ratings.push({ user: userId, rating, review });
     existingProduct.totalRatings += 1;
 
     // Calculate the average rating
@@ -617,6 +1015,28 @@ export const rateProduct = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getProductsReviews = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if the company service with the given ID exists
+    const existingProduct = await Product.findById(id).populate({
+      path: "ratings",
+      populate: {
+        path: "user",
+        select: ["username", "userType"],
+      },
+    });
+    if (!existingProduct) {
+      return res.status(404).json({ message: "Company service not found" });
+    }
+
+    res.json(existingProduct.ratings);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 export const getProductTotalRating = async (req, res) => {
   try {
     const { id } = req.params;
@@ -628,6 +1048,23 @@ export const getProductTotalRating = async (req, res) => {
     }
 
     res.json({ averageRating: existingProduct.averageRating });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const searchProducts = async (req, res) => {
+  try {
+    let queryParams = {};
+    const { keyword, country } = req.query;
+    const regex = new RegExp(keyword, "i");
+    queryParams.name = regex;
+    if (country) queryParams.country = country;
+    const suggestions = await Product.find(queryParams)
+      .limit(PAGINATION_LIMIT)
+      .populate("category", "name")
+      .populate("owner", "username userType");
+    res.status(200).json(suggestions);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

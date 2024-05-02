@@ -2,6 +2,7 @@ import { Comment } from "../models/news/comment_model.js";
 import { Like } from "../models/news/likes_model.js";
 import { News } from "../models/news/newsModel.js";
 
+const PAGINATION_LIMIT = 10;
 // export const getAllNews = async (req, res) => {
 //     try {
 //         const data = await News.find({}).populate('creator', '_id username profilePhoto');
@@ -18,6 +19,9 @@ import { News } from "../models/news/newsModel.js";
 // }
 export const getAllNews = async (req, res) => {
   try {
+    const { page } = req.query;
+
+    const pageNumber = parseInt(page, 10) || 1;
     const data = await News.find({})
       .populate("creator", "_id username profilePhoto")
       .populate({
@@ -26,7 +30,9 @@ export const getAllNews = async (req, res) => {
           path: "user",
           select: "username",
         },
-      });
+      })
+      .skip((pageNumber - 1) * PAGINATION_LIMIT)
+      .limit(PAGINATION_LIMIT);
 
     if (!data) {
       return res.status(404).json({ message: "No data found" });
@@ -236,11 +242,13 @@ export const toggleLikeOnNews = async (req, res) => {
 export const getCompanyNews = async (req, res) => {
   try {
     const { id } = req.params;
+    const { page } = req.query;
 
-    const news = await News.find({ creator: id }).populate(
-      "creator",
-      "username profilePhoto"
-    );
+    const pageNumber = parseInt(page, 10) || 1;
+    const news = await News.find({ creator: id })
+      .populate("creator", "username profilePhoto")
+      .skip((pageNumber - 1) * PAGINATION_LIMIT)
+      .limit(PAGINATION_LIMIT);
     res.status(200).json(news);
   } catch (error) {
     res.status(500).json({ message: error.message });

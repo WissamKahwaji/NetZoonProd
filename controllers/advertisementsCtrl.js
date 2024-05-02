@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { Advertisement } from "../models/advertisements/advertisementsModel.js";
 import userModel from "../models/userModel.js";
 import { PurchAds } from "../models/advertisements/purch_ads_model.js";
-
+const PAGINATION_LIMIT = 10;
 export const getAdvertisements = async (req, res) => {
   try {
     const {
@@ -14,8 +14,10 @@ export const getAdvertisements = async (req, res) => {
       endDate,
       year,
       type,
+      page,
     } = req.query;
 
+    const pageNumber = parseInt(page, 10) || 1;
     const currentDate = new Date();
 
     const query = {
@@ -65,15 +67,23 @@ export const getAdvertisements = async (req, res) => {
     if (type) {
       query.advertisingType = type;
     }
+    const countQuery = Advertisement.countDocuments(query);
 
-    const data = await Advertisement.find(query).populate(
-      "owner",
-      "username userType"
-    );
+    const dataQuery = await Advertisement.find(query)
+      .populate("owner", "username userType")
+      .skip((pageNumber - 1) * PAGINATION_LIMIT)
+      .limit(PAGINATION_LIMIT);
 
+    const [totalAdvertisements, advertisements] = await Promise.all([
+      countQuery,
+      dataQuery,
+    ]);
+
+    const totalPages = Math.ceil(totalAdvertisements / PAGINATION_LIMIT);
     return res.json({
       message: "success",
-      results: data,
+
+      results: advertisements,
     });
   } catch (error) {
     return res.status(500).json({
@@ -85,6 +95,7 @@ export const getAdvertisements = async (req, res) => {
 export const getUserAds = async (req, res) => {
   try {
     const { userId } = req.params;
+
     const data = await Advertisement.find({ owner: userId }).populate(
       "owner",
       "username userType"
@@ -118,14 +129,19 @@ export const getAdvertisementById = async (req, res) => {
 
 export const getAdvertisementByType = async (req, res) => {
   const userAdvertisingType = req.params.userAdvertisingType;
+  const { page } = req.query;
 
+  const pageNumber = parseInt(page, 10) || 1;
   const currentDate = new Date();
 
   try {
     const data = await Advertisement.find({
       advertisingType: userAdvertisingType,
       advertisingEndDate: { $gt: currentDate.toISOString() },
-    }).populate("owner", "username userType");
+    })
+      .populate("owner", "username userType")
+      .skip((pageNumber - 1) * PAGINATION_LIMIT)
+      .limit(PAGINATION_LIMIT);
     if (!data) {
       return res.status(404).json({ message: "no Data Found" });
     }
