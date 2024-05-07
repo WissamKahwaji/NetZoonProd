@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const factoriesCategoriesSchema = mongoose.Schema(
+const freezoneCategoriesSchema = mongoose.Schema(
   {
     title: {
       type: String,
@@ -10,7 +10,7 @@ const factoriesCategoriesSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    factory: [
+    companies: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
@@ -20,7 +20,7 @@ const factoriesCategoriesSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-export const FactoryCategories = mongoose.model(
-  "FactoriesCategories",
-  factoriesCategoriesSchema
+export const FreezoneCategoriesModel = mongoose.model(
+  "FreezoneCategories",
+  freezoneCategoriesSchema
 );

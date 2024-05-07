@@ -32,6 +32,8 @@ import {
   deleteVehicle,
   resetVehicleCount,
   getAllLocalCompanyCategories,
+  getAllFreeZoneCategories,
+  getFreeZoneCompaniesByCategory,
 } from "../controllers/categories.js";
 import auth from "../middlewares/auth.js";
 import {
@@ -59,10 +61,11 @@ router.post(
   createCategory
 );
 //Free Zone routes
+router.get("/freezone/all-categories", getAllFreeZoneCategories);
 router.get("/freezoon", getFreezoon);
 router.post("/create-freezoon", createfreezoon);
 router.get("/freezoon/:id", getFreezoonById);
-
+router.get("/freezone-companies/:id", getFreeZoneCompaniesByCategory);
 //Factories routes
 router.get("/factories", getAllFactoriesCategories);
 router.get("/get-all-factories/:id", getAllFactories);

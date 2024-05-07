@@ -27,7 +27,10 @@ const userSchema = mongoose.Schema(
           "advertiser",
         ],
       },
-      subType: String,
+      subType: {
+        name: String,
+        imgUrl: String,
+      },
     },
     // userType: {
     //   type: String,

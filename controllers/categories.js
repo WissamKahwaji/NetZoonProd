@@ -18,6 +18,7 @@ import { Governmental } from "../models/categories/governmental/gonermental_mode
 import { customscategories } from "../models/categories/customs/custom_categories.js";
 import { VehicleCompany } from "../models/categories/vehicle/vehicle_company_model.js";
 import { LocalCompanyCategories } from "../models/categories/local_company/company_categories.js";
+import { FreezoneCategoriesModel } from "../models/categories/freezoon/freezone_categories_model.js";
 
 //Categories controllers
 export const getAllCategories = async (req, res) => {
@@ -62,6 +63,14 @@ export const createCategory = async (req, res) => {
 };
 
 //FreeZoon controllers
+export const getAllFreeZoneCategories = async (req, res) => {
+  try {
+    const data = await FreezoneCategoriesModel.find();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 export const getFreezoon = async (req, res) => {
   try {
     const data = await Freezoon.find().select("-freezoonplaces");
@@ -200,8 +209,8 @@ export const getAllLocalCompanies = async (req, res) => {
         path: "companies",
       });
     }
-
-    res.json(data);
+    const response = data.companies;
+    res.json(response);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -284,8 +293,36 @@ export const getGovermentalById = async (req, res) => {
 export const getAllFactoriesCategories = async (req, res) => {
   try {
     await Factory.find({});
-    const data = await FactoryCategories.find({}, { title: 1 });
+    const data = await FactoryCategories.find({}, { title: 1, titleAr: 1 });
     res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getFreeZoneCompaniesByCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { country } = req.query;
+    let data;
+    if (country) {
+      data = await FreezoneCategoriesModel.findById(id, {
+        companies: 1,
+        _id: 0,
+      }).populate({
+        path: "companies",
+        match: { country },
+      });
+    } else {
+      data = await FreezoneCategoriesModel.findById(id, {
+        companies: 1,
+        _id: 0,
+      }).populate({
+        path: "companies",
+      });
+    }
+    const response = data.companies;
+    res.json(response);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -302,7 +339,7 @@ export const getAllFactories = async (req, res) => {
         _id: 0,
       }).populate({
         path: "factory",
-        match: { country }, // Filter the populated 'factory' based on the matching 'country' value
+        match: { country },
       });
     } else {
       data = await FactoryCategories.findById(id, {
@@ -310,7 +347,6 @@ export const getAllFactories = async (req, res) => {
         _id: 0,
       }).populate({
         path: "factory",
-        // Filter the populated 'factory' based on the matching 'country' value
       });
     }
 

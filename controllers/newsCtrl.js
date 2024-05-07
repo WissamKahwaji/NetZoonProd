@@ -24,16 +24,16 @@ export const getAllNews = async (req, res) => {
     const pageNumber = parseInt(page, 10) || 1;
     const data = await News.find({})
       .populate("creator", "_id username profilePhoto")
-      .populate({
-        path: "comments",
-        populate: {
-          path: "user",
-          select: "username",
-        },
-      })
+
       .skip((pageNumber - 1) * PAGINATION_LIMIT)
       .limit(PAGINATION_LIMIT);
-
+    // .populate({
+    //   path: "comments",
+    //   populate: {
+    //     path: "user",
+    //     select: "username",
+    //   },
+    // })
     if (!data) {
       return res.status(404).json({ message: "No data found" });
     }
@@ -54,6 +54,7 @@ export const getNewsById = async (req, res) => {
       "creator",
       "username profilePhoto"
     );
+
     if (!data) {
       return res.status(404).json({ message: "no Data Found" });
     }

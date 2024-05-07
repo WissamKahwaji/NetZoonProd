@@ -38,7 +38,9 @@ export const getAllDeals = async (req, res) => {
         .skip((pageNumber - 1) * PAGINATION_LIMIT)
         .limit(PAGINATION_LIMIT);
     } else {
-      dealsItems = await DealsItems.find({ endDate: { $gte: currentDate } });
+      dealsItems = await DealsItems.find({
+        endDate: { $gte: currentDate },
+      }).populate("owner", "username userType");
     }
 
     // const dealsItems = await DealsItems.find({ country: country });
