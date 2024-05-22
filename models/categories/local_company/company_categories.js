@@ -10,7 +10,7 @@ const localCompaniesCategoriesSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-
+    imageUrl: String,
     companies: [
       {
         type: mongoose.Schema.Types.ObjectId,

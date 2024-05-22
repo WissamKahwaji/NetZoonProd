@@ -293,7 +293,10 @@ export const getGovermentalById = async (req, res) => {
 export const getAllFactoriesCategories = async (req, res) => {
   try {
     await Factory.find({});
-    const data = await FactoryCategories.find({}, { title: 1, titleAr: 1 });
+    const data = await FactoryCategories.find(
+      {},
+      { title: 1, titleAr: 1, imageUrl: 1 }
+    );
     res.json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });

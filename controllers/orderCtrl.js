@@ -181,6 +181,10 @@ export const getUserOrders = async (req, res) => {
         populate: [
           { path: "category", select: "name" },
           { path: "owner", select: "username userType" },
+          {
+            path: "ratings",
+            populate: [{ path: "user", select: "username userType" }],
+          },
         ],
       })
       .populate("userId", "username")
@@ -203,6 +207,10 @@ export const getClientOrders = async (req, res) => {
         populate: [
           { path: "category", select: "name" },
           { path: "owner", select: "username userType" },
+          {
+            path: "ratings",
+            populate: [{ path: "user", select: "username userType" }],
+          },
         ],
       })
       .populate("userId", "username")

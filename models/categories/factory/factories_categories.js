@@ -10,6 +10,7 @@ const factoriesCategoriesSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    imageUrl: String,
     factory: [
       {
         type: mongoose.Schema.Types.ObjectId,
